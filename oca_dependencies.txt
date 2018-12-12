@@ -1,0 +1,1 @@
+sale-workflow https://github.com/Eficent/sale-workflow 12.0-mig-sale_stock_sourcing_address

@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_base_account_taxjar,base.account.taxjar,model_base_account_taxjar,base.group_user,1,0,0,0
+access_base_account_taxjar_manager,base.account.taxjar.manager,model_base_account_taxjar,base.group_system,1,1,1,1
+access_product_tax_code_user,product.taxjar.category.user,model_product_taxjar_category,base.group_user,1,0,0,0
+access_product_tax_code_group_system,product.taxjar.category.manager,model_product_taxjar_category,base.group_system,1,1,1,1
