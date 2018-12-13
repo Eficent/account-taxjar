@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-
-    <record id="account_taxjar_product_tax_code_form" model="ir.ui.view">
-        <field name="name">product.tax.code.from</field>
-        <field name="model">product.tax.code</field>
+    <!-- Copyright 2018 Eficent Business and IT Consulting Services S.L.
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+    <record id="account_taxjar_product_taxjar_category_form" model="ir.ui.view">
+        <field name="name">product.taxjar.category.from</field>
+        <field name="model">product.taxjar.category</field>
         <field name="arch" type="xml">
             <form>
                 <sheet>
@@ -17,11 +18,11 @@
         </field>
     </record>
 
-    <record id="account_taxjar_product_tax_code_tree" model="ir.ui.view">
-        <field name="name">product.tax.code.tree</field>
-        <field name="model">product.tax.code</field>
+    <record id="account_taxjar_product_taxjar_category_tree" model="ir.ui.view">
+        <field name="name">product.taxjar.category.tree</field>
+        <field name="model">product.taxjar.category</field>
         <field name="arch" type="xml">
-            <tree string="Product Tax Category">
+            <tree create="0">
                 <field name="name"/>
                 <field name="code"/>
                 <field name="description"/>
@@ -29,9 +30,9 @@
         </field>
     </record>
 
-    <record id="account_taxjar_product_tax_code_search" model="ir.ui.view">
-        <field name="name">product.tax.code.search</field>
-        <field name="model">product.tax.code</field>
+    <record id="account_taxjar_product_taxjar_category_search" model="ir.ui.view">
+        <field name="name">product.taxjar.category.search</field>
+        <field name="model">product.taxjar.category</field>
         <field name="arch" type="xml">
             <search string="Product Tax Category">
                 <field name="name"/>
@@ -41,16 +42,15 @@
         </field>
     </record>
 
-    <record id="account_taxjar_product_tax_code_action" model="ir.actions.act_window">
-        <field name="name">Taxjar Categories</field>
+    <record id="account_taxjar_product_taxjar_category_action" model="ir.actions.act_window">
+        <field name="name">TaxJar Categories</field>
         <field name="type">ir.actions.act_window</field>
-        <field name="res_model">product.tax.code</field>
+        <field name="res_model">product.taxjar.category</field>
         <field name="view_type">form</field>
-        <field name="search_view_id" ref="account_taxjar_product_tax_code_search"/>
-        <field name="view_id" ref="account_taxjar_product_tax_code_tree"/>
+        <field name="view_id" ref="account_taxjar_product_taxjar_category_tree"/>
     </record>
 
-    <menuitem action="account_taxjar_product_tax_code_action" groups="base.group_no_one" id="menu_taxjar_product_tax_code_action" parent="account.account_account_menu" sequence="3"/>
+    <menuitem action="account_taxjar_product_taxjar_category_action" id="menu_taxjar_categories" parent="menu_account_taxjar" sequence="2"/>
 
     <record id="product_template_taxjar_inherit_form" model="ir.ui.view">
         <field name="name">product.template.form.inherit</field>
@@ -58,7 +58,7 @@
         <field name="inherit_id" ref="product.product_template_form_view"/>
         <field name="arch" type="xml">
             <field name="taxes_id" position="after">
-                <field name="tax_code_id" string="Taxjar Category"/>
+                <field name="tax_code_id" string="TaxJar Category"/>
             </field>
         </field>
     </record>
@@ -70,8 +70,8 @@
         <field name="arch" type="xml">
             <group name='first' position="after">
                 <group>
-                    <group name="sale_taxjar" string="taxjar">
-                        <field name="tax_code_id" string="Taxjar Category"/>
+                    <group name="sale_taxjar" string="TaxJar">
+                        <field name="tax_code_id" string="TaxJar Category"/>
                     </group>
                 </group>
             </group>
