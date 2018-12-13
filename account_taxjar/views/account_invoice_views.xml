@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Copyright 2018 Eficent Business and IT Consulting Services S.L.
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
     <record model="ir.actions.server" id="action_account_invoice_update_taxes">
-        <field name="name">Update taxes with Taxjar</field>
+        <field name="name">Update taxes with TaxJar</field>
         <field name="model_id" ref="account.model_account_invoice"/>
         <field name="binding_model_id" ref="account.model_account_invoice"/>
         <field name="state">code</field>
         <field name="code">
 for invoice in records:
-    invoice.validate_taxes_on_invoice()
+    if invoice.fiscal_position_id.is_nexus:
+        invoice.prepare_taxes_on_invoice()
         </field>
     </record>
 </odoo>
