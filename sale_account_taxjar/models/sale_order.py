@@ -3,6 +3,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 from odoo import api, models, _
 from odoo.tools.float_utils import float_round
+from odoo.exceptions import ValidationError
 
 from odoo.addons.account_taxjar.models.taxjar_request import TaxJarRequest
 
@@ -125,8 +126,9 @@ class SaleOrder(models.Model):
         nexus = self._get_nexus()
         lines = self._get_lines()
         if not company or not partner or not nexus or not lines:
-            return True
-            # TODO: Add Exception
+            raise ValidationError(_("Request cannot be executed due to: "
+                                    "company, partner, nexus or invoice lines"
+                                    "don't exist"))
 
         taxjar_id = self.fiscal_position_id.taxjar_id
         taxable_account_id = taxjar_id.taxable_account_id.id
@@ -145,7 +147,6 @@ class SaleOrder(models.Model):
 
         for index, line in enumerate(self.order_line):
             if line.price_unit >= 0.0 and line.product_uom_qty >= 0.0:
-                # TODO: Add UoM compatibility
                 price = line.price_unit * \
                         (1 - (line.discount or 0.0) / 100.0) * \
                         line.product_uom_qty
@@ -159,11 +160,10 @@ class SaleOrder(models.Model):
                                                                   city)
                             taxes = []
                             for rate in rates:
-                                if rate['amount'] != 0.0:
-                                    tax = self.update_tax(rate,
-                                                          jur_state,
-                                                          taxable_account_id)
-                                    taxes.append(tax)
+                                tax = self.update_tax(rate,
+                                                      jur_state,
+                                                      taxable_account_id)
+                                taxes.append(tax)
                             line.tax_id = [
                                 (6, 0, [x.id for x in taxes])]
         return True
