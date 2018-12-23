@@ -11,11 +11,12 @@ from odoo.addons.account_taxjar.models.taxjar_request import TaxJarRequest
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
-    @api.multi
-    def action_confirm(self):
-        if self.fiscal_position_id.is_nexus:
-            self.prepare_taxes_on_order()
-        return super(SaleOrder, self).action_confirm()
+    # # Disable sales order taxes on confirm
+    # @api.multi
+    # def action_confirm(self):
+    #     if self.fiscal_position_id.is_nexus:
+    #         self.prepare_taxes_on_order()
+    #     return super(SaleOrder, self).action_confirm()
 
     def _get_nexus(self):
         return self.fiscal_position_id
