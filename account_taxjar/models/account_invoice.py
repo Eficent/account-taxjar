@@ -15,14 +15,15 @@ _logger = logging.getLogger(__name__)
 class AccountInvoice(models.Model):
     _inherit = 'account.invoice'
 
-    @api.multi
-    def action_invoice_open(self):
-        for invoice in self:
-            if invoice.fiscal_position_id.is_nexus and \
-                    invoice.type in ['out_invoice', 'out_refund']:
-                invoice.with_context(taxjar_authorize_transaction=True). \
-                    prepare_taxes_on_invoice()
-        return super(AccountInvoice, self).action_invoice_open()
+    # # Disable account invoice taxes on validate
+    # @api.multi
+    # def action_invoice_open(self):
+    #     for invoice in self:
+    #         if invoice.fiscal_position_id.is_nexus and \
+    #                 invoice.type in ['out_invoice', 'out_refund']:
+    #             invoice.with_context(taxjar_authorize_transaction=True). \
+    #                 prepare_taxes_on_invoice()
+    #     return super(AccountInvoice, self).action_invoice_open()
 
     @staticmethod
     def _get_rate(request, lines, partner, company, nexus):
