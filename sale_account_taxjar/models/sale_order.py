@@ -40,9 +40,8 @@ class SaleOrder(models.Model):
     # TODO: Code duplicated from account_invoice in account_taxjar
     #  move to another place to inherit and remove
     @staticmethod
-    def _prepare_breakdown_rates(item, jurisdiction_state, county, city):
+    def _prepare_breakdown_rates(item, jur_state, county, city):
         precision = 3
-
         state_tax_amount = float_round(item['state_sales_tax_rate'] * 100,
                                        precision_digits=precision)
         county_tax_amount = float_round(item['county_tax_rate'] * 100,
@@ -51,46 +50,69 @@ class SaleOrder(models.Model):
                                       precision_digits=precision)
         special_tax_amount = float_round(item['special_tax_rate'] * 100,
                                          precision_digits=precision)
-        res = [
-            {
+        res = []
+        if state_tax_amount:
+            res.append({
                 'name': 'State Tax: %s: %.3f %%' % (
-                    jurisdiction_state.code, state_tax_amount),
+                    jur_state.code, state_tax_amount),
                 'amount': state_tax_amount,
-                'state_id': jurisdiction_state.id
-            },
-            {
+                'state_id': jur_state.id
+            })
+        else:
+            res.append({
+                'name': 'State Tax Exempt',
+                'amount': 0.0
+            })
+        if county_tax_amount:
+            res.append({
                 'name': 'County Tax: %s/%s %.3f %%' % (
-                    jurisdiction_state.code, county, county_tax_amount),
+                    jur_state.code, county, county_tax_amount),
                 'amount': county_tax_amount,
                 'county': county,
-                'state_id': jurisdiction_state.id
-            },
-            {
+                'state_id': jur_state.id
+            })
+        else:
+            res.append({
+                'name': 'County Tax Exempt',
+                'amount': 0.0
+            })
+        if city_tax_amount:
+            res.append({
                 'name': 'City Tax: %s/%s/%s %.3f %%' % (
-                    city, county, jurisdiction_state.code, city_tax_amount),
+                    city, county, jur_state.code, city_tax_amount),
                 'amount': city_tax_amount,
                 'city': city,
                 'county': county,
-                'state_id': jurisdiction_state.id
+                'state_id': jur_state.id
 
-            },
-            {
+            })
+        else:
+            res.append({
+                'name': 'City Tax Exempt',
+                'amount': 0.0
+            })
+        if special_tax_amount:
+            res.append({
                 'name': 'Special District Tax: %s/%s/%s %.3f %%' % (
-                    city, county, jurisdiction_state.code, special_tax_amount),
+                    city, county, jur_state.code, special_tax_amount),
                 'amount': special_tax_amount,
                 'city': city,
                 'county': county,
-                'state_id': jurisdiction_state.id
-            },
-        ]
+                'state_id': jur_state.id
+            })
+        else:
+            res.append({
+                'name': 'District Tax Exempt',
+                'amount': 0.0
+            })
         return res
 
     # TODO: Code duplicated from account_invoice in account_taxjar
     #  move to another place to inherit and remove
-    def update_tax(self, tax, jur_state, taxable_account_id):
-        city = tax['city'] if 'city' in tax else ''
-        county = tax['county'] if 'county' in tax else ''
-        state_id = tax['state_id']
+    def update_tax(self, tax, taxable_account_id):
+        city = tax['city'] if 'city' in tax else False
+        county = tax['county'] if 'county' in tax else False
+        state_id = tax['state_id'] if 'state_id' in tax else False
         account_tax = self.env['account.tax']
         amount = tax['amount']
         name = tax['name']
@@ -110,9 +132,9 @@ class SaleOrder(models.Model):
                 'amount': amount,
                 'amount_type': 'percent',
                 'type_tax_use': 'sale',
-                'description': 'Sales Tax',
+                'description': name,
                 'account_id': taxable_account_id,
-                'state_id': jur_state.id,
+                'state_id': state_id,
                 'city': city,
                 'county': county,
             }
@@ -162,7 +184,6 @@ class SaleOrder(models.Model):
                             taxes = []
                             for rate in rates:
                                 tax = self.update_tax(rate,
-                                                      jur_state,
                                                       taxable_account_id)
                                 taxes.append(tax)
                             line.tax_id = [
