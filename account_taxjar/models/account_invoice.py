@@ -54,8 +54,6 @@ class AccountInvoice(models.Model):
     
     @staticmethod
     def _prepare_breakdown_rates(item, jur_state, county, city):
-        # TODO: As we find amount = 0 here maybe it is interesting to
-        #  remove logic from main loop, more Pythonic,
         precision = 3
         state_tax_amount = float_round(item['state_sales_tax_rate'] * 100,
                                        precision_digits=precision)
@@ -65,21 +63,34 @@ class AccountInvoice(models.Model):
                                       precision_digits=precision)
         special_tax_amount = float_round(item['special_tax_rate'] * 100,
                                          precision_digits=precision)
-        res = [
-            {
+        res = []
+        if state_tax_amount:
+            res.append({
                 'name': 'State Tax: %s: %.3f %%' % (
                     jur_state.code, state_tax_amount),
                 'amount': state_tax_amount,
                 'state_id': jur_state.id
-            },
-            {
+            })
+        else:
+            res.append({
+                'name': 'State Tax Exempt',
+                'amount': 0.0
+            })
+        if county_tax_amount:
+            res.append({
                 'name': 'County Tax: %s/%s %.3f %%' % (
                     jur_state.code, county, county_tax_amount),
                 'amount': county_tax_amount,
                 'county': county,
                 'state_id': jur_state.id
-            },
-            {
+            })
+        else:
+            res.append({
+                'name': 'County Tax Exempt',
+                'amount': 0.0
+            })
+        if city_tax_amount:
+            res.append({
                 'name': 'City Tax: %s/%s/%s %.3f %%' % (
                     city, county, jur_state.code, city_tax_amount),
                 'amount': city_tax_amount,
@@ -87,27 +98,35 @@ class AccountInvoice(models.Model):
                 'county': county,
                 'state_id': jur_state.id
 
-            },
-            {
+            })
+        else:
+            res.append({
+                'name': 'City Tax Exempt',
+                'amount': 0.0
+            })
+        if special_tax_amount:
+            res.append({
                 'name': 'Special District Tax: %s/%s/%s %.3f %%' % (
                     city, county, jur_state.code, special_tax_amount),
                 'amount': special_tax_amount,
                 'city': city,
                 'county': county,
                 'state_id': jur_state.id
-            },
-        ]
+            })
+        else:
+            res.append({
+                'name': 'District Tax Exempt',
+                'amount': 0.0
+            })
         return res
     
-    def update_tax(self, tax, jur_state, taxable_account_id):
-        city = tax['city'] if 'city' in tax else ''
-        county = tax['county'] if 'county' in tax else ''
-        state_id = tax['state_id']
+    def update_tax(self, tax, taxable_account_id):
+        city = tax['city'] if 'city' in tax else False
+        county = tax['county'] if 'county' in tax else False
+        state_id = tax['state_id'] if 'state_id' in tax else False
         account_tax = self.env['account.tax']
         amount = tax['amount']
         name = tax['name']
-        # TODO: As account.tax have constraint unique for name maybe
-        #       it is only need to look for name, will increase performance?
         domain = [('name', '=', name),
                   ('state_id', '=', state_id),
                   ('amount', '=', amount),
@@ -126,7 +145,7 @@ class AccountInvoice(models.Model):
                 'type_tax_use': 'sale',
                 'description': name,
                 'account_id': taxable_account_id,
-                'state_id': jur_state.id,
+                'state_id': state_id,
                 'city': city,
                 'county': county,
             }
@@ -162,8 +181,7 @@ class AccountInvoice(models.Model):
             if line.price_unit >= 0.0 and line.quantity >= 0.0:
                 price = line.price_unit * \
                         (1 - (line.discount or 0.0) / 100.0) * \
-                        line.uom_id._compute_quantity(
-                            line.quantity, line.product_id.uom_id, round=False)
+                        line.quantity
                 if price:
                     for item in items:
                         # TODO: Test failing because on test fixture
@@ -177,7 +195,6 @@ class AccountInvoice(models.Model):
                             taxes = []
                             for rate in rates:
                                 tax = self.update_tax(rate,
-                                                      jur_state,
                                                       taxable_account_id)
                                 taxes.append(tax)
                             line.invoice_line_tax_ids = [
