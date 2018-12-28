@@ -14,6 +14,7 @@
     'external_dependencies': {'python': ['taxjar']},
     'data': [
         'security/ir.model.access.csv',
+        'data/account_tax_group.xml',
         'views/base_account_taxjar_views.xml',
         'views/account_fiscal_position_views.xml',
         'views/account_invoice_views.xml',

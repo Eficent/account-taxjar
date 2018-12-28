@@ -53,17 +53,20 @@ class TaxJarRequest(object):
             'shipping': 0.0,
             'line_items': line_items
         }
-        if nexus.sourcing_type == 'origin':
-            nexus_addresses = [{
-                'id': nexus.name,
-                'country': company.state_id.country_id.code,
-                'state': company.state_id.code,
-                'zip': company.zip,
-                'city': company.city,
-                'street': company.street,
-            }]
-            extend_body = {'nexus_addresses': nexus_addresses}
-            body = {**body, **extend_body}
+        # TODO: According with TaxJar support Our API will only return sales
+        #       tax and the breakdown showing jurisdictions when the 'to'
+        #       address is in one of your nexus locations.
+        # if nexus.sourcing_type == 'origin':
+        #     nexus_addresses = [{
+        #         'id': nexus.name,
+        #         'country': company.state_id.country_id.code,
+        #         'state': company.state_id.code,
+        #         'zip': company.zip,
+        #         'city': company.city,
+        #         'street': company.street,
+        #     }]
+        #     extend_body = {'nexus_addresses': nexus_addresses}
+        #     body = {**body, **extend_body}
         # TODO: nexus_address should be some warehouse location in that state
         #  so, let's keep empty until we reach where to put that information
         #  https://support.taxjar.com/article/170-address-of-nexus-guidelines

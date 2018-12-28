@@ -69,12 +69,14 @@ class AccountInvoice(models.Model):
                 'name': 'State Tax: %s: %.3f %%' % (
                     jur_state.code, state_tax_amount),
                 'amount': state_tax_amount,
-                'state_id': jur_state.id
+                'state_id': jur_state.id,
+                'tax_group': 'account_taxjar.tax_group_taxjar_state'
             })
         else:
             res.append({
                 'name': 'State Tax Exempt',
-                'amount': 0.0
+                'amount': 0.0,
+                'tax_group': 'account_taxjar.tax_group_taxjar_state'
             })
         if county_tax_amount:
             res.append({
@@ -82,12 +84,14 @@ class AccountInvoice(models.Model):
                     jur_state.code, county, county_tax_amount),
                 'amount': county_tax_amount,
                 'county': county,
-                'state_id': jur_state.id
+                'state_id': jur_state.id,
+                'tax_group': 'account_taxjar.tax_group_taxjar_county'
             })
         else:
             res.append({
                 'name': 'County Tax Exempt',
-                'amount': 0.0
+                'amount': 0.0,
+                'tax_group': 'account_taxjar.tax_group_taxjar_county'
             })
         if city_tax_amount:
             res.append({
@@ -96,13 +100,15 @@ class AccountInvoice(models.Model):
                 'amount': city_tax_amount,
                 'city': city,
                 'county': county,
-                'state_id': jur_state.id
+                'state_id': jur_state.id,
+                'tax_group': 'account_taxjar.tax_group_taxjar_city'
 
             })
         else:
             res.append({
                 'name': 'City Tax Exempt',
-                'amount': 0.0
+                'amount': 0.0,
+                'tax_group': 'account_taxjar.tax_group_taxjar_city'
             })
         if special_tax_amount:
             res.append({
@@ -111,12 +117,14 @@ class AccountInvoice(models.Model):
                 'amount': special_tax_amount,
                 'city': city,
                 'county': county,
-                'state_id': jur_state.id
+                'state_id': jur_state.id,
+                'tax_group': 'account_taxjar.tax_group_taxjar_district'
             })
         else:
             res.append({
                 'name': 'District Tax Exempt',
-                'amount': 0.0
+                'amount': 0.0,
+                'tax_group': 'account_taxjar.tax_group_taxjar_district'
             })
         return res
     
@@ -127,6 +135,7 @@ class AccountInvoice(models.Model):
         account_tax = self.env['account.tax']
         amount = tax['amount']
         name = tax['name']
+        tax_group = tax['tax_group']
         domain = [('name', '=', name),
                   ('state_id', '=', state_id),
                   ('amount', '=', amount),
@@ -148,6 +157,7 @@ class AccountInvoice(models.Model):
                 'state_id': state_id,
                 'city': city,
                 'county': county,
+                'tax_group_id': self.env.ref(tax_group).id
             }
             tax = account_tax.sudo().create(tax_dict)
         return tax
