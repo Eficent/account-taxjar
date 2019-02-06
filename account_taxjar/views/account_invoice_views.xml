@@ -13,4 +13,16 @@ for invoice in records:
         invoice.prepare_taxes_on_invoice()
         </field>
     </record>
+
+    <record id="taxjar_button_invoice_form" model="ir.ui.view">
+        <field name="name">account.invoice.form</field>
+        <field name="model">account.invoice</field>
+        <field name="inherit_id" ref="account.invoice_form"/>
+        <field name="arch" type="xml">
+            <header position="inside">
+                <button name="prepare_taxes_on_invoice" string="Update TaxJar taxes" type="object" class="btn-primary"/>
+            </header>
+        </field>
+    </record>
+
 </odoo>
