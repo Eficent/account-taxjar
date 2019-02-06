@@ -13,4 +13,16 @@ for order in records:
         </field>
         <field name="binding_model_id" ref="sale.model_sale_order"/>
     </record>
+
+    <record id="taxjar_button_view_order_form" model="ir.ui.view">
+        <field name="name">sale.order.form</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <header position="inside">
+                <button name="prepare_taxes_on_order" string="Update TaxJar taxes" type="object" class="btn-primary"/>
+            </header>
+        </field>
+    </record>
+
 </odoo>
