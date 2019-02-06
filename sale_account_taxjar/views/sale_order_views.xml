@@ -20,7 +20,7 @@ for order in records:
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
             <header position="inside">
-                <button name="prepare_taxes_on_order" string="Update TaxJar taxes" type="object" class="btn-primary"/>
+                <button name="prepare_taxes_on_order" string="Update TaxJar taxes" type="object" states="draft" class="btn-primary"/>
             </header>
         </field>
     </record>
