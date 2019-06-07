@@ -24,7 +24,7 @@ class TaxJarRequest(object):
         return self.taxjar.nexus_regions()
 
     # TODO: Validate Nexus workflow consistency.
-    def get_rate(self, lines, partner, company, nexus):
+    def get_rate(self, lines, to_address, from_address):
         line_items = []
         for line in lines:
             line_items.append({
@@ -38,18 +38,18 @@ class TaxJarRequest(object):
             })
 
         body = {
-            'from_country': company.state_id.country_id.code,
-            'from_zip': company.zip,
-            'from_state': company.state_id.code,
-            'from_city': company.city,
-            'from_street': company.street,
+            'from_country': from_address.state_id.country_id.code,
+            'from_zip': from_address.zip,
+            'from_state': from_address.state_id.code,
+            'from_city': from_address.city,
+            'from_street': from_address.street,
             'to_country':
-                partner.state_id.country_id.code
-                if partner.state_id else partner.country_id.code,
-            'to_zip': partner.zip,
-            'to_state': partner.state_id.code or '',
-            'to_city': partner.city or '',
-            'to_street': partner.street or '',
+                to_address.state_id.country_id.code
+                if to_address.state_id else to_address.country_id.code,
+            'to_zip': to_address.zip,
+            'to_state': to_address.state_id.code or '',
+            'to_city': to_address.city or '',
+            'to_street': to_address.street or '',
             'shipping': 0.0,
             'line_items': line_items
         }

@@ -9,7 +9,7 @@ from odoo.addons.account_taxjar.models.taxjar_request import TaxJarRequest
 
 
 class SaleOrder(models.Model):
-    _inherit = 'sale.order'
+    _inherit = 'sale.order.line'
 
     # # Disable sales order taxes on confirm
     # @api.multi
@@ -18,10 +18,10 @@ class SaleOrder(models.Model):
     #         self.prepare_taxes_on_order()
     #     return super(SaleOrder, self).action_confirm()
 
-    def _get_nexus(self):
-        return self.fiscal_position_id
+    def _get_from_address(self):
+        return self.sourcing_address_id or self.company_id.partner_id
 
-    def _get_partner(self):
+    def _get_to_address(self):
         return self.partner_id
 
     def _get_lines(self):
@@ -150,11 +150,10 @@ class SaleOrder(models.Model):
     # TODO: Split functions and refactor duplicities
     @api.multi
     def prepare_taxes_on_order(self):
-        company = self.company_id or self.env.user.company_id
-        partner = self._get_partner()
-        nexus = self._get_nexus()
+        to_address = self._get_to_address()
+        from_address = self._get_from_address()
         lines = self._get_lines()
-        if not company or not partner or not nexus or not lines:
+        if not from_address or not to_address or not lines:
             raise ValidationError(_("Request cannot be executed due to: "
                                     "company, partner, nexus or invoice lines"
                                     "don't exist"))
@@ -165,7 +164,7 @@ class SaleOrder(models.Model):
         api_token = taxjar_id.taxjar_api_token
         request = TaxJarRequest(api_url, api_token)
 
-        res = request.get_rate(lines, partner, company, nexus)
+        res = self._get_rate(request, lines, to_address, from_address)
 
         items = res['breakdown']['line_items'] if 'breakdown' in res else {}
         jurisdiction = res['jurisdictions'] if 'jurisdictions' in res else {}
