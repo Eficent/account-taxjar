@@ -1,7 +1,7 @@
 # Copyright 2018 Eficent Business and IT Consulting Services S.L.
 #   (http://www.eficent.com)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
-from odoo import api, models, _
+from odoo import api, fields, models, _
 from odoo.tools.float_utils import float_round
 from odoo.exceptions import ValidationError
 
@@ -11,24 +11,36 @@ from odoo.addons.account_taxjar.models.taxjar_request import TaxJarRequest
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
-    # # Disable sales order taxes on confirm
-    # @api.multi
-    # def action_confirm(self):
-    #     if self.fiscal_position_id.is_nexus:
-    #         self.prepare_taxes_on_order()
-    #     return super(SaleOrder, self).action_confirm()
+    show_taxjar_button = fields.Boolean(
+        'Hide TaxJar Button',
+        compute='_compute_hide_taxjar_button', default=False)
 
-    def _get_nexus(self):
-        return self.fiscal_position_id
+    @api.depends('fiscal_position_id', 'state')
+    def _compute_hide_taxjar_button(self):
+        for rec in self:
+            if rec.state == 'draft' and rec.fiscal_position_id.taxjar_id:
+                rec.show_taxjar_button = True
 
-    def _get_partner(self):
-        return self.partner_id
+    @staticmethod
+    def _get_rate(request, lines, from_address, to_address):
+        try:
+            res = request.get_rate(lines, from_address, to_address)
+        except Exception as e:
+            raise ValidationError(_("TaxJar SmartCalc API Error: "+str(e)))
+        return res
+
+    def _get_to_address(self):
+        return self.partner_shipping_id
 
     def _get_lines(self):
         lines = []
         for line in self.order_line:
             lines.append(line)
         return lines
+
+    def _get_from_addresses(self):
+        from_addresses = self.order_line.mapped('sourcing_address_id')
+        return from_addresses or [self.company_id.partner_id]
 
     def _get_jurisdiction_state(self, jurisdiction):
         state_id = self.env['res.country.state'].search([
@@ -150,13 +162,12 @@ class SaleOrder(models.Model):
     # TODO: Split functions and refactor duplicities
     @api.multi
     def prepare_taxes_on_order(self):
-        company = self.company_id or self.env.user.company_id
-        partner = self._get_partner()
-        nexus = self._get_nexus()
+        to_address = self._get_to_address()
+        from_addresses = self._get_from_addresses()
         lines = self._get_lines()
-        if not company or not partner or not nexus or not lines:
+        if not from_addresses or not to_address or not lines:
             raise ValidationError(_("Request cannot be executed due to: "
-                                    "company, partner, nexus or invoice lines"
+                                    "company, partner, nexus or lines"
                                     "don't exist"))
 
         taxjar_id = self.fiscal_position_id.taxjar_id
@@ -165,33 +176,37 @@ class SaleOrder(models.Model):
         api_token = taxjar_id.taxjar_api_token
         request = TaxJarRequest(api_url, api_token)
 
-        res = request.get_rate(lines, partner, company, nexus)
+        for from_address in from_addresses:
+            res = self._get_rate(request, lines, to_address, from_address)
+            items = res['breakdown']['line_items'] \
+                if 'breakdown' in res else {}
+            jurisdiction = res['jurisdictions'] \
+                if 'jurisdictions' in res else {}
+            jur_state = self._get_jurisdiction_state(jurisdiction)
+            county = jurisdiction['county'] \
+                if 'county' in jurisdiction else ''
+            city = jurisdiction['city'] if 'city' in jurisdiction else ''
+            # TODO: Add district IF it is shown by jurisdiction.
 
-        items = res['breakdown']['line_items'] if 'breakdown' in res else {}
-        jurisdiction = res['jurisdictions'] if 'jurisdictions' in res else {}
-        jur_state = self._get_jurisdiction_state(jurisdiction)
-        county = jurisdiction['county'] if 'county' in jurisdiction else ''
-        city = jurisdiction['city'] if 'city' in jurisdiction else ''
-        # TODO: Add district IF it is shown by jurisdiction.
-
-        for index, line in enumerate(self.order_line):
-            if line.price_unit >= 0.0 and line.product_uom_qty >= 0.0:
-                price = line.price_unit * \
-                        (1 - (line.discount or 0.0) / 100.0) * \
-                        line.product_uom_qty
-                if price:
-                    # Improve style, for + filter instead of 2 lines above
-                    for item in items:
-                        if item['id'] == str(line.id):
-                            rates = self._prepare_breakdown_rates(item,
-                                                                  jur_state,
-                                                                  county,
-                                                                  city)
-                            taxes = []
-                            for rate in rates:
-                                tax = self.update_tax(rate,
-                                                      taxable_account_id)
-                                taxes.append(tax)
-                            line.tax_id = [
-                                (6, 0, [x.id for x in taxes])]
+            for index, line in enumerate(self.order_line.filtered(
+                    lambda l: l.sourcing_address_id == from_address)):
+                if line.price_unit >= 0.0 and line.product_uom_qty >= 0.0:
+                    price = line.price_unit * \
+                            (1 - (line.discount or 0.0) / 100.0) * \
+                            line.product_uom_qty
+                    if price:
+                        # Improve style, for + filter instead of 2 lines above
+                        for item in items:
+                            if item['id'] == str(line.id):
+                                rates = self._prepare_breakdown_rates(
+                                    item, jur_state, county, city)
+                                taxes = []
+                                for rate in rates:
+                                    tax = self.update_tax(rate,
+                                                          taxable_account_id)
+                                    taxes.append(tax)
+                                line.tax_id = [
+                                    (6, 0, [x.id for x in taxes])]
+        self.with_context(mail_notrack=True).message_post(
+            body=_('Successfully updated Taxes from TaxJar'))
         return True
