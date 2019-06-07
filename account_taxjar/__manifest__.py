@@ -10,6 +10,7 @@
     'depends': [
         'l10n_us',
         'account_invoicing',
+        'sale_order_line_sourcing_address'
     ],
     'external_dependencies': {'python': ['taxjar']},
     'data': [

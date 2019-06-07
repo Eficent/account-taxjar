@@ -6,6 +6,7 @@ import logging
 from odoo import api, models, _
 from odoo.exceptions import ValidationError
 from odoo.tools.float_utils import float_round
+from itertools import groupby
 
 from .taxjar_request import TaxJarRequest
 
@@ -26,17 +27,17 @@ class AccountInvoice(models.Model):
     #     return super(AccountInvoice, self).action_invoice_open()
 
     @staticmethod
-    def _get_rate(request, lines, partner, company, nexus):
+    def _get_rate(request, lines, from_address, to_address):
         try:
-            res = request.get_rate(lines, partner, company, nexus)
+            res = request.get_rate(lines, from_address, to_address)
         except Exception as e:
             raise ValidationError(_("TaxJar SmartCalc API Error: "+str(e)))
         return res
 
-    def _get_nexus(self):
-        return self.fiscal_position_id
+    def _get_from_address(self):
+        return self.sourcing_address_id or self.company_id.partner_id
 
-    def _get_partner(self):
+    def _get_to_address(self):
         return self.partner_id
 
     def _get_lines(self):
@@ -163,12 +164,16 @@ class AccountInvoice(models.Model):
         return tax
 
     @api.multi
+    def group_invoice_line_from_address(self):
+        pass
+
+
+    @api.multi
     def prepare_taxes_on_invoice(self):
-        company = self.company_id or self.env.user.company_id
-        partner = self._get_partner()
-        nexus = self._get_nexus()
+        to_address = self._get_to_address()
+        from_address = self._get_from_address()
         lines = self._get_lines()
-        if not company or not partner or not nexus or not lines:
+        if not from_address or not to_address or not lines:
             raise ValidationError(_("Request cannot be executed due to: "
                                     "company, partner, nexus or invoice lines"
                                     "don't exist"))
@@ -178,7 +183,7 @@ class AccountInvoice(models.Model):
         api_token = self.fiscal_position_id.taxjar_id.sudo().taxjar_api_token
         request = TaxJarRequest(api_url, api_token)
 
-        res = self._get_rate(request, lines, partner, company, nexus)
+        res = self._get_rate(request, lines, to_address, from_address)
 
         items = res['breakdown']['line_items'] if 'breakdown' in res else {}
         jurisdiction = res['jurisdictions'] if 'jurisdictions' in res else {}
