@@ -18,6 +18,14 @@ class SaleOrder(models.Model):
     #         self.prepare_taxes_on_order()
     #     return super(SaleOrder, self).action_confirm()
 
+    @staticmethod
+    def _get_rate(request, lines, from_address, to_address):
+        try:
+            res = request.get_rate(lines, from_address, to_address)
+        except Exception as e:
+            raise ValidationError(_("TaxJar SmartCalc API Error: "+str(e)))
+        return res
+
     def _get_to_address(self):
         return self.partner_id
 
