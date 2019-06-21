@@ -27,15 +27,18 @@ class TaxJarRequest(object):
     def get_rate(self, lines, to_address, from_address):
         line_items = []
         for line in lines:
-            line_items.append({
+            rec = {
                 'id': line.id,
                 'unit_price': line.price_unit,
                 'quantity': line.quantity
                 if hasattr(line, 'quantity') else line.product_uom_qty,
-                'product_tax_code':
-                    line.product_id.product_tmpl_id.tax_code_id.code,
                 'discount': line.discount,
-            })
+            }
+            tax_code = line.product_id.product_tmpl_id.tax_code_id or \
+                line.product_id.product_tmpl_id.categ_id.tax_code_id
+            if tax_code:
+                    rec['product_tax_code'] = tax_code.code
+            line_items.append(rec)
 
         body = {
             'from_country': from_address.state_id.country_id.code,

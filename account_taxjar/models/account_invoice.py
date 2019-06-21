@@ -34,8 +34,8 @@ class AccountInvoice(models.Model):
             raise ValidationError(_("TaxJar SmartCalc API Error: "+str(e)))
         return res
 
-    def _get_from_address(self):
-        return self.company_id.partner_id
+    def _get_from_addresses(self):
+        return [self.company_id.partner_id]
 
     def _get_to_address(self):
         return self.partner_id
@@ -170,9 +170,9 @@ class AccountInvoice(models.Model):
     @api.multi
     def prepare_taxes_on_invoice(self):
         to_address = self._get_to_address()
-        from_address = self._get_from_address()
+        from_addresses = self._get_from_addresses()
         lines = self._get_lines()
-        if not from_address or not to_address or not lines:
+        if not from_addresses or not to_address or not lines:
             raise ValidationError(_("Request cannot be executed due to: "
                                     "company, partner, nexus or invoice lines"
                                     "don't exist"))
@@ -182,36 +182,39 @@ class AccountInvoice(models.Model):
         api_token = self.fiscal_position_id.taxjar_id.sudo().taxjar_api_token
         request = TaxJarRequest(api_url, api_token)
 
-        res = self._get_rate(request, lines, to_address, from_address)
-
-        items = res['breakdown']['line_items'] if 'breakdown' in res else {}
-        jurisdiction = res['jurisdictions'] if 'jurisdictions' in res else {}
-        jur_state = self._get_jur_state(jurisdiction)
-        county = jurisdiction['county'] if 'county' in jurisdiction else ''
-        city = jurisdiction['city'] if 'city' in jurisdiction else ''
-        # TODO: Add district IF it is shown by jurisdiction.
-        #       it has never been shown in requests before.
-        for index, line in enumerate(self.invoice_line_ids):
-            if line.price_unit >= 0.0 and line.quantity >= 0.0:
-                price = line.price_unit * \
-                        (1 - (line.discount or 0.0) / 100.0) * \
-                        line.quantity
-                if price:
-                    for item in items:
-                        # TODO: Test failing because on test fixture
-                        #       invoice_line_id is not syncronized with
-                        #       cassettes
-                        if item['id'] == str(line.id):
-                            rates = self._prepare_breakdown_rates(item,
-                                                                  jur_state,
-                                                                  county,
-                                                                  city)
-                            taxes = []
-                            for rate in rates:
-                                tax = self.update_tax(rate,
-                                                      taxable_account_id)
-                                taxes.append(tax)
-                            line.invoice_line_tax_ids = [
-                                (6, 0, [x.id for x in taxes])]
+        for from_address in from_addresses:
+            res = self._get_rate(request, lines, to_address, from_address)
+            items = res['breakdown']['line_items'] \
+                if 'breakdown' in res else {}
+            jurisdiction = res['jurisdictions'] \
+                if 'jurisdictions' in res else {}
+            jur_state = self._get_jur_state(jurisdiction)
+            county = jurisdiction['county'] if 'county' in jurisdiction else ''
+            city = jurisdiction['city'] if 'city' in jurisdiction else ''
+            # TODO: Add district IF it is shown by jurisdiction.
+            #       it has never been shown in requests before.
+            for index, line in enumerate(self.invoice_line_ids.filtered(
+                    lambda l: l.sourcing_address_id == from_address)):
+                if line.price_unit >= 0.0 and line.quantity >= 0.0:
+                    price = line.price_unit * \
+                            (1 - (line.discount or 0.0) / 100.0) * \
+                            line.quantity
+                    if price:
+                        for item in items:
+                            # TODO: Test failing because on test fixture
+                            #       invoice_line_id is not syncronized with
+                            #       cassettes
+                            if item['id'] == str(line.id):
+                                rates = self._prepare_breakdown_rates(item,
+                                                                      jur_state,
+                                                                      county,
+                                                                      city)
+                                taxes = []
+                                for rate in rates:
+                                    tax = self.update_tax(rate,
+                                                          taxable_account_id)
+                                    taxes.append(tax)
+                                line.invoice_line_tax_ids = [
+                                    (6, 0, [x.id for x in taxes])]
         self._onchange_invoice_line_ids()
         return True
