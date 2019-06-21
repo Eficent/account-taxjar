@@ -11,6 +11,8 @@ class AccountInvoice(models.Model):
         return self.partner_shipping_id or \
                super(AccountInvoice, self)._get_partner()
 
-    def _get_from_address(self):
-        partner_id = super(AccountInvoice, self)._get_from_address()
-        return self.sourcing_address_id or partner_id
+    def _get_from_addresses(self):
+        partner_ids = super(AccountInvoice, self)._get_from_address()
+        from_addresses = self.invoice_line_ids.mapped(
+            'sourcing_address_id')
+        return from_addresses or partner_ids
