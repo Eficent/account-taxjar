@@ -35,7 +35,7 @@ class AccountInvoice(models.Model):
         return res
 
     def _get_from_address(self):
-        return self.sourcing_address_id or self.company_id.partner_id
+        return self.company_id.partner_id
 
     def _get_to_address(self):
         return self.partner_id
