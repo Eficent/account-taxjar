@@ -11,7 +11,8 @@
     "website": "https://www.eficent.com/",
     'depends': [
         'account_taxjar',
-        'sale_management',
+        'sale',
+        'sale_stock_sourcing_address',
     ],
     'data': [
         'views/sale_order_views.xml',

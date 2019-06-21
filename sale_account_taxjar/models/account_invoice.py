@@ -10,3 +10,7 @@ class AccountInvoice(models.Model):
     def _get_partner(self):
         return self.partner_shipping_id or \
                super(AccountInvoice, self)._get_partner()
+
+    def _get_from_address(self):
+        partner_id = super(AccountInvoice, self)._get_from_address()
+        return self.sourcing_address_id or partner_id
