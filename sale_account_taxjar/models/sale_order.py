@@ -19,7 +19,7 @@ class SaleOrder(models.Model):
     #     return super(SaleOrder, self).action_confirm()
 
     def _get_to_address(self):
-        return self.order_id.partner_id
+        return self.partner_id
 
     def _get_lines(self):
         lines = []
