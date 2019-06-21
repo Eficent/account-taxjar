@@ -9,7 +9,7 @@ from odoo.addons.account_taxjar.models.taxjar_request import TaxJarRequest
 
 
 class SaleOrder(models.Model):
-    _inherit = 'sale.order.line'
+    _inherit = 'sale.order'
 
     # # Disable sales order taxes on confirm
     # @api.multi
@@ -18,17 +18,18 @@ class SaleOrder(models.Model):
     #         self.prepare_taxes_on_order()
     #     return super(SaleOrder, self).action_confirm()
 
-    def _get_from_address(self):
-        return self.sourcing_address_id or self.company_id.partner_id
-
     def _get_to_address(self):
-        return self.partner_id
+        return self.order_id.partner_id
 
     def _get_lines(self):
         lines = []
         for line in self.order_line:
             lines.append(line)
         return lines
+
+    def _get_from_addresses(self):
+        from_addresses = self.order_line.mapped('sourcing_address_id')
+        return from_addresses or [self.company_id.partner_id]
 
     def _get_jurisdiction_state(self, jurisdiction):
         state_id = self.env['res.country.state'].search([
@@ -151,11 +152,11 @@ class SaleOrder(models.Model):
     @api.multi
     def prepare_taxes_on_order(self):
         to_address = self._get_to_address()
-        from_address = self._get_from_address()
+        from_addresses = self._get_from_addresses()
         lines = self._get_lines()
-        if not from_address or not to_address or not lines:
+        if not from_addresses or not to_address or not lines:
             raise ValidationError(_("Request cannot be executed due to: "
-                                    "company, partner, nexus or invoice lines"
+                                    "company, partner, nexus or lines"
                                     "don't exist"))
 
         taxjar_id = self.fiscal_position_id.taxjar_id
@@ -164,33 +165,35 @@ class SaleOrder(models.Model):
         api_token = taxjar_id.taxjar_api_token
         request = TaxJarRequest(api_url, api_token)
 
-        res = self._get_rate(request, lines, to_address, from_address)
+        for from_address in from_addresses:
+            res = self._get_rate(request, lines, to_address, from_address)
+            items = res['breakdown']['line_items'] \
+                if 'breakdown' in res else {}
+            jurisdiction = res['jurisdictions'] \
+                if 'jurisdictions' in res else {}
+            jur_state = self._get_jurisdiction_state(jurisdiction)
+            county = jurisdiction['county'] \
+                if 'county' in jurisdiction else ''
+            city = jurisdiction['city'] if 'city' in jurisdiction else ''
+            # TODO: Add district IF it is shown by jurisdiction.
 
-        items = res['breakdown']['line_items'] if 'breakdown' in res else {}
-        jurisdiction = res['jurisdictions'] if 'jurisdictions' in res else {}
-        jur_state = self._get_jurisdiction_state(jurisdiction)
-        county = jurisdiction['county'] if 'county' in jurisdiction else ''
-        city = jurisdiction['city'] if 'city' in jurisdiction else ''
-        # TODO: Add district IF it is shown by jurisdiction.
-
-        for index, line in enumerate(self.order_line):
-            if line.price_unit >= 0.0 and line.product_uom_qty >= 0.0:
-                price = line.price_unit * \
-                        (1 - (line.discount or 0.0) / 100.0) * \
-                        line.product_uom_qty
-                if price:
-                    # Improve style, for + filter instead of 2 lines above
-                    for item in items:
-                        if item['id'] == str(line.id):
-                            rates = self._prepare_breakdown_rates(item,
-                                                                  jur_state,
-                                                                  county,
-                                                                  city)
-                            taxes = []
-                            for rate in rates:
-                                tax = self.update_tax(rate,
-                                                      taxable_account_id)
-                                taxes.append(tax)
-                            line.tax_id = [
-                                (6, 0, [x.id for x in taxes])]
+            for index, line in enumerate(self.order_line.filtered(
+                    lambda l: l.sourcing_address_id == from_address)):
+                if line.price_unit >= 0.0 and line.product_uom_qty >= 0.0:
+                    price = line.price_unit * \
+                            (1 - (line.discount or 0.0) / 100.0) * \
+                            line.product_uom_qty
+                    if price:
+                        # Improve style, for + filter instead of 2 lines above
+                        for item in items:
+                            if item['id'] == str(line.id):
+                                rates = self._prepare_breakdown_rates(
+                                    item, jur_state, county, city)
+                                taxes = []
+                                for rate in rates:
+                                    tax = self.update_tax(rate,
+                                                          taxable_account_id)
+                                    taxes.append(tax)
+                                line.tax_id = [
+                                    (6, 0, [x.id for x in taxes])]
         return True
