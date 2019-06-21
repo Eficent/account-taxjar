@@ -27,7 +27,7 @@ class SaleOrder(models.Model):
         return res
 
     def _get_to_address(self):
-        return self.partner_id
+        return self.partner_shipping_id
 
     def _get_lines(self):
         lines = []
