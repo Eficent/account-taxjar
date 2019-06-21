@@ -167,7 +167,6 @@ class AccountInvoice(models.Model):
     def group_invoice_line_from_address(self):
         pass
 
-
     @api.multi
     def prepare_taxes_on_invoice(self):
         to_address = self._get_to_address()
