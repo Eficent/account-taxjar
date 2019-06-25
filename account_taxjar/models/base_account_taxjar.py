@@ -18,7 +18,6 @@ class BaseAccountTaxJar(models.Model):
     taxjar_api_token = fields.Char(
         string='TaxJar API KEY',
     )
-
     taxable_account_id = fields.Many2one(
         'account.account', string='Taxable Account TaxJar',
         required=True

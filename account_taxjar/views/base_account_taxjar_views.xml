@@ -48,6 +48,6 @@
         <field name="view_id" ref="view_base_account_taxjar_tree"/>
     </record>
 
-    <menuitem id="menu_account_taxjar" name="TaxJar" parent="account.menu_finance_configuration" sequence="6"/>
+    <menuitem id="menu_account_taxjar" name="TaxJar" parent="base.menu_custom" sequence="6"/>
     <menuitem id="menu_taxjar_configuration" name="TaxJar Configuration" parent="menu_account_taxjar"  action="action_taxjar" sequence="1"/>
 </odoo>
