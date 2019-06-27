@@ -1,7 +1,7 @@
 # Copyright 2018 Eficent Business and IT Consulting Services S.L.
 #   (http://www.eficent.com)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
-from odoo import api, models, _
+from odoo import api, fields, models, _
 from odoo.tools.float_utils import float_round
 from odoo.exceptions import ValidationError
 
@@ -11,12 +11,15 @@ from odoo.addons.account_taxjar.models.taxjar_request import TaxJarRequest
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
-    # # Disable sales order taxes on confirm
-    # @api.multi
-    # def action_confirm(self):
-    #     if self.fiscal_position_id.is_nexus:
-    #         self.prepare_taxes_on_order()
-    #     return super(SaleOrder, self).action_confirm()
+    show_taxjar_button = fields.Boolean(
+        'Hide TaxJar Button',
+        compute='_compute_hide_taxjar_button', default=False)
+
+    @api.depends('fiscal_position_id', 'state')
+    def _compute_hide_taxjar_button(self):
+        for rec in self:
+            if rec.state == 'draft' and rec.fiscal_position_id.taxjar_id:
+                rec.show_taxjar_button = True
 
     @staticmethod
     def _get_rate(request, lines, from_address, to_address):

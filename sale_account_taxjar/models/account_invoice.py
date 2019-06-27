@@ -12,7 +12,7 @@ class AccountInvoice(models.Model):
                super(AccountInvoice, self)._get_partner()
 
     def _get_from_addresses(self):
-        partner_ids = super(AccountInvoice, self)._get_from_address()
+        partner_ids = super(AccountInvoice, self)._get_from_addresses()
         from_addresses = self.invoice_line_ids.mapped(
             'sourcing_address_id')
         return from_addresses or partner_ids
