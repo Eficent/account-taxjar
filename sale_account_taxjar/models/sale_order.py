@@ -207,4 +207,6 @@ class SaleOrder(models.Model):
                                     taxes.append(tax)
                                 line.tax_id = [
                                     (6, 0, [x.id for x in taxes])]
+        self.with_context(mail_notrack=True).message_post(
+            body=_('Successfully updated Taxes from TaxJar'))
         return True
