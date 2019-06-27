@@ -3,10 +3,9 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 import logging
 
-from odoo import api, models, _
+from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 from odoo.tools.float_utils import float_round
-from itertools import groupby
 
 from .taxjar_request import TaxJarRequest
 
@@ -16,15 +15,15 @@ _logger = logging.getLogger(__name__)
 class AccountInvoice(models.Model):
     _inherit = 'account.invoice'
 
-    # # Disable account invoice taxes on validate
-    # @api.multi
-    # def action_invoice_open(self):
-    #     for invoice in self:
-    #         if invoice.fiscal_position_id.is_nexus and \
-    #                 invoice.type in ['out_invoice', 'out_refund']:
-    #             invoice.with_context(taxjar_authorize_transaction=True). \
-    #                 prepare_taxes_on_invoice()
-    #     return super(AccountInvoice, self).action_invoice_open()
+    show_taxjar_button = fields.Boolean(
+        'Hide TaxJar Button',
+        compute='_compute_hide_taxjar_button', default=False)
+
+    @api.depends('fiscal_position_id', 'state')
+    def _compute_hide_taxjar_button(self):
+        for rec in self:
+            if rec.state == 'draft' and rec.fiscal_position_id.taxjar_id:
+                rec.show_taxjar_button = True
 
     @staticmethod
     def _get_rate(request, lines, from_address, to_address):

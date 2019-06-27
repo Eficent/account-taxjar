@@ -20,7 +20,13 @@ for invoice in records:
         <field name="inherit_id" ref="account.invoice_form"/>
         <field name="arch" type="xml">
             <header position="inside">
-                <button name="prepare_taxes_on_invoice" string="Update TaxJar taxes" type="object" states="draft" class="btn-primary"/>
+                <field name="show_taxjar_button" invisible="1"/>
+                <button name="prepare_taxes_on_invoice"
+                        string="Update taxes from TaxJar"
+                        type="object"
+                        attrs="{'invisible': [('show_taxjar_button','=',False)]}"
+                        states="draft"
+                        class="btn-primary"/>
             </header>
         </field>
     </record>
