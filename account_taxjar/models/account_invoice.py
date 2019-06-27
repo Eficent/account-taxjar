@@ -205,10 +205,11 @@ class AccountInvoice(models.Model):
                             #       invoice_line_id is not syncronized with
                             #       cassettes
                             if item['id'] == str(line.id):
-                                rates = self._prepare_breakdown_rates(item,
-                                                                      jur_state,
-                                                                      county,
-                                                                      city)
+                                rates = self._prepare_breakdown_rates(
+                                    item,
+                                    jur_state,
+                                    county,
+                                    city)
                                 taxes = []
                                 for rate in rates:
                                     tax = self.update_tax(rate,
@@ -217,4 +218,6 @@ class AccountInvoice(models.Model):
                                 line.invoice_line_tax_ids = [
                                     (6, 0, [x.id for x in taxes])]
         self._onchange_invoice_line_ids()
+        self.with_context(mail_notrack=True).message_post(
+            body=_('Successfully updated Taxes from TaxJar'))
         return True
