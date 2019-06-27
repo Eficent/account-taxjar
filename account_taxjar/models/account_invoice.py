@@ -143,7 +143,7 @@ class AccountInvoice(models.Model):
                   ('type_tax_use', '=', 'sale'),
                   ('city', '=', city),
                   ('county', '=', county),
-                  ('account_id', '=', taxable_account_id)]
+                  ]
 
         tax = account_tax.sudo().search(domain, limit=1)
         if not tax:
@@ -154,6 +154,7 @@ class AccountInvoice(models.Model):
                 'type_tax_use': 'sale',
                 'description': name,
                 'account_id': taxable_account_id,
+                'refund_account_id': taxable_account_id,
                 'state_id': state_id,
                 'city': city,
                 'county': county,
