@@ -27,7 +27,7 @@ class ProductTaxJarCategory(models.Model):
         if name:
             tax_code_ids = self.search(
                 [('description', operator, name)] + args, limit=limit,
-                acces_rights_uid=access_rights_uid)
+                access_rights_uid=access_rights_uid)
         if not tax_code_ids:
             tax_code_ids = self._search([('code', operator, name)] + args,
                                         limit=limit,
