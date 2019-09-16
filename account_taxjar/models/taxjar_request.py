@@ -1,6 +1,6 @@
-# Copyright 2018 Eficent Business and IT Consulting Services S.L.
+# Copyright 2018-2019 Eficent Business and IT Consulting Services S.L.
 #   (http://www.eficent.com)
-# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
+# License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl.html).
 import logging
 
 
@@ -37,7 +37,7 @@ class TaxJarRequest(object):
             tax_code = line.product_id.product_tmpl_id.tax_code_id or \
                 line.product_id.product_tmpl_id.categ_id.tax_code_id
             if tax_code:
-                    rec['product_tax_code'] = tax_code.code
+                rec['product_tax_code'] = tax_code.code
             line_items.append(rec)
 
         body = {

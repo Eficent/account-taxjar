@@ -1,6 +1,6 @@
-# Copyright 2018 Eficent Business and IT Consulting Services S.L.
+# Copyright 2018-2019 Eficent Business and IT Consulting Services S.L.
 #   (http://www.eficent.com)
-# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
+# License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl.html).
 from odoo import api, fields, models, _
 
 
@@ -25,7 +25,7 @@ class ProductTaxJarCategory(models.Model):
         tax_code_ids = []
         access_rights_uid = name_get_uid or self._uid
         if name:
-            tax_code_ids = self.search(
+            tax_code_ids = self._search(
                 [('description', operator, name)] + args, limit=limit,
                 access_rights_uid=access_rights_uid)
         if not tax_code_ids:

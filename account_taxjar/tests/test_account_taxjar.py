@@ -1,8 +1,10 @@
-# Copyright 2018 Eficent Business and IT Consulting Services S.L.
+# Copyright 2018-2019 Eficent Business and IT Consulting Services S.L.
 # - (https://www.eficent.com)
-# License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html).
+# License LGPL-3.0 or later (https://www.gnu.org/licenses/lgpl.html).
 import logging
 from os.path import dirname, join
+from odoo.tests import SingleTransactionCase
+from .utils import scrub_string
 
 from vcr import VCR
 
@@ -16,118 +18,161 @@ recorder = VCR(
     decode_compressed_response=True,
 )
 
-from odoo.tests import SavepointCase
-from odoo.exceptions import ValidationError
 
-
-class TestAccountTaxjar(SavepointCase):
+class TestAccountTaxjar(SingleTransactionCase):
 
     @classmethod
-    def setUpClass(cls):
-        super(TestAccountTaxjar, cls).setUpClass()
-        # Create Partner
-        cls.state = cls.env.ref('base.state_us_6')
-        cls.partner = cls.env['res.partner'].create({
-            'name': 'City of Henderson',
-            'street': '720-726 S Gunnison Ave',
-            'city': 'Buena Vista',
-            'zip': '81211',
-            'state_id': cls.state.id,
-        })
+    def setUpClass(self):
+        super(TestAccountTaxjar, self).setUpClass()
+        self.uom_unit = self.env.ref('uom.product_uom_unit')
         # Update Company address
-        cls.company = cls.env.ref('base.main_company')
-        cls.company_res_partner = cls.env.ref('base.main_company').partner_id
-        cls.company_res_partner.update(
+        self.state_CO = self.env.ref('base.state_us_6')
+        self.company = self.env.ref('base.main_company')
+        self.company_res_partner = self.env.ref('base.main_company').partner_id
+        self.company_res_partner.update(
             {
-                'country_id': cls.state.country_id.id,
-                'state_id': cls.state.id,
+                'country_id': self.state_CO.country_id.id,
+                'state_id': self.state_CO.id,
                 'zip': '80538',
                 'city': 'Loveland',
                 'street': '626 W 66th St',
             }
         )
-        # Prepare Tax Account
-        cls.account_type = cls.env['account.account.type'].create({
+        # Create an account to handle taxes
+        self.account_type = self.env['account.account.type'].create({
             'name': 'Test',
             'type': 'payable',
         })
-
-        cls.account = cls.env['account.account'].create({
+        self.account = self.env['account.account'].create({
             'name': 'Test Sale Tax account',
             'code': 'TEST',
-            'user_type_id': cls.account_type.id,
+            'user_type_id': self.account_type.id,
             'reconcile': True,
         })
-
         # Create TaxJar Configuration
-        cls.taxjar = cls.env['base.account.taxjar'].create({
+        self.taxjar = self.env['base.account.taxjar'].create({
             'name': 'TaxJar',
             'taxjar_api_url': 'https://api.sandbox.taxjar.com',
-            'taxjar_api_token': '',
-            'taxable_account_id': cls.account.id
+            'taxjar_api_token': 'token_pride',
+            'taxable_account_id': self.account.id
         })
 
-        # Create Nexus
-        cls.nexus = cls.env['account.fiscal.position'].create(
-            {
-                'name': 'Colorado',
-                'state_ids': [(6, 0, [cls.state.id])],
-                'country_id': cls.state.country_id.id,
-                'auto_apply': True,
-                'is_nexus': True,
-                'sourcing_type': 'destination',
-                'taxjar_id': cls.taxjar.id,
-            }
-        )
-        cls.tax_category = cls.env['product.taxjar.category'].create(
-            {
-                'code': '31000',
-                'description': 'Digital products transferred electronically',
-                'name': 'Digital Goods',
-                'taxjar_id': cls.taxjar.id
-            }
-        )
-        cls.product_template = cls.env['product.template'].create({
+        self.customer = self.env['res.partner'].create({
+            'name': 'City of Henderson',
+            'street': '720-726 S Gunnison Ave',
+            'city': 'Buena Vista',
+            'zip': '81211',
+            'state_id': self.state_CO.id,
+            'country_id': self.state_CO.country_id.id,
+        })
+
+        self.product_template = self.env['product.template'].create({
             'name': 'Computer',
-            'tax_code_id': cls.tax_category.id
         })
-        cls.product_product = cls.env['product.product'].create({
-            'name': 'Compute',
-            'product_tmpl_id': cls.product_template.id
+        self.product_product = self.env['product.product'].create({
+            'name': 'Awesome Computer',
+            'product_tmpl_id': self.product_template.id,
+            'invoice_policy': 'order'
         })
 
-        cls.account = cls.env.ref('account.demo_sale_of_land_account')
+        self.service_template = self.env['product.template'].create({
+            'name': 'Service',
+        })
+        self.service_product = self.env['product.product'].create({
+            'name': 'Awesome Service',
+            'type': 'service',
+            'product_tmpl_id': self.service_template.id,
+            'invoice_policy': 'order'
+        })
 
-        cls.invoice = cls.env['account.invoice'].create({
-            'name': "Test Customer Invoice",
-            'journal_id': cls.env['account.journal'].search(
-                [('type', '=', 'sale')])[0].id,
-            'partner_id': cls.partner.id,
-            'account_id': cls.account.id,
-            'fiscal_position_id': cls.nexus.id
+    def _create_invoice_from_sale(self, sale):
+        payment = self.env['sale.advance.payment.inv'].create({
+            'advance_payment_method': 'all'
         })
-        cls.invoice_line = cls.env['account.invoice.line']
-        cls.invoice_line1 = cls.invoice_line.create({
-            'product_id': cls.product_product.id,
-            'invoice_id': cls.invoice.id,
-            'name': 'Compute Invoice Line',
-            'price_unit': 200.0,
-            'uom_id': cls.env.ref('product.product_uom_unit').id,
-            'account_id': cls.account.id,
-            'quantity': 1,
-        })
-    # TODO: Not working, unable to update id from request.
-    def test_account_invoice_validate_on_update_taxjar_taxes(self):
-        with recorder.use_cassette(cassette_library_dir=join(
-                dirname(__file__), 'fixtures/cassettes'),
-                replace_post_data_parameters=[('id', self.invoice_line1.id)]):
-            self.invoice.action_invoice_open()
-            self.assertEqual(self.invoice.amount_total, 215.8)
+        sale_context = {
+            'active_id': sale.id,
+            'active_ids': sale.ids,
+            'active_model': 'sale.order',
+            'open_invoices': True,
+        }
+        res = payment.with_context(sale_context).create_invoices()
+        return self.env['account.invoice'].browse(res['res_id'])
 
     @recorder.use_cassette()
-    def test_sync_taxjar_tax_code(self):
+    def test_01_sync_taxjar_tax_code(self):
         self.taxjar.sync_taxjar_tax_code()
+        taxjar_tax_codes = self.env['product.taxjar.category'].search(
+            [('taxjar_id', '=', self.taxjar.id)])
+        self.assertEqual(len(taxjar_tax_codes), 29)
 
     @recorder.use_cassette()
-    def test_sync_taxjar_nexus_region(self):
+    def test_02_sync_taxjar_nexus_region(self):
         self.taxjar.sync_taxjar_nexus_region()
+        taxjar_nexus_region = self.env['account.fiscal.position'].search(
+            [('taxjar_id', '=', self.taxjar.id)])
+        self.assertEqual(len(taxjar_nexus_region), 6)
+
+    def test_03_account_invoice_validate_on_update_taxjar_taxes(self):
+        self.product_template.tax_code_id = self.env[
+            'product.taxjar.category'].search([('code', '=', '31000')],
+                                              limit=1).id
+        so = self.env['sale.order'].create({
+            'partner_id': self.customer.id,
+            'partner_invoice_id': self.customer.id,
+            'partner_shipping_id': self.customer.id,
+            'warehouse_id': self.browse_ref('stock.warehouse0').id,
+            'order_line': [(0, 0, {'name': self.product_product.name,
+                                   'product_id': self.product_product.id,
+                                   'product_uom_qty': 1,
+                                   'product_uom': self.uom_unit.id,
+                                   'price_unit': 200.0,
+                                   })]})
+        # Get fiscal_position_id
+        so.onchange_partner_shipping_id()
+        self.assertEqual(so.fiscal_position_id.is_nexus, True)
+        # Confirm our standard sale order
+        so.action_confirm()
+        invoice = self._create_invoice_from_sale(so)
+        # Updating invoice_line_id for mock response
+        with recorder.use_cassette(
+                path='test_03_account_invoice_validate_on_update_taxjar_taxes',
+                before_record_response=scrub_string(
+                    'OLD_ACCOUNT_LINE_ID',
+                    str(invoice.invoice_line_ids.id))
+        ):
+            invoice.prepare_taxes()
+            self.assertEqual(invoice.amount_total, 215.8)
+
+    def test_04_account_invoice_validate_on_update_zero_taxes(self):
+        self.service_template.tax_code_id = self.env[
+            'product.taxjar.category'].search([('code', '=', '19000')],
+                                              limit=1).id
+        so = self.env['sale.order'].create({
+            'partner_id': self.customer.id,
+            'partner_invoice_id': self.customer.id,
+            'partner_shipping_id': self.customer.id,
+            'warehouse_id': self.browse_ref('stock.warehouse0').id,
+            'order_line': [(0, 0, {'name': self.service_product.name,
+                                   'product_id': self.service_product.id,
+                                   'product_uom_qty': 1,
+                                   'product_uom': self.uom_unit.id,
+                                   'price_unit': 50.0,
+                                   })]})
+        # Get fiscal_position_id
+        so.onchange_partner_shipping_id()
+        self.assertEqual(so.fiscal_position_id.is_nexus, True)
+        # Confirm our standard sale order
+        so.action_confirm()
+        invoice = self._create_invoice_from_sale(so)
+        # Updating invoice_line_id for mock response
+        with recorder.use_cassette(
+                path='test_04_account_invoice_validate_on_update_zero_taxes',
+                before_record_response=scrub_string(
+                    'OLD_ACCOUNT_LINE_ID',
+                    str(invoice.invoice_line_ids.id))
+        ):
+            invoice.prepare_taxes()
+            self.assertEqual(invoice.amount_total, 50)
+        taxes = invoice.get_taxes_values()
+        self.assertFalse(any('Exempt' not in taxes[t]['name'] for t in taxes))
+        self.assertEqual(len(taxes), 4)

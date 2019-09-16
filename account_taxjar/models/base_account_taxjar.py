@@ -1,6 +1,6 @@
-# Copyright 2018 Eficent Business and IT Consulting Services S.L.
+# Copyright 2018-2019 Eficent Business and IT Consulting Services S.L.
 #   (http://www.eficent.com)
-# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
+# License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl.html).
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 
@@ -9,6 +9,7 @@ from .taxjar_request import TaxJarRequest
 
 class BaseAccountTaxJar(models.Model):
     _name = 'base.account.taxjar'
+    _description = 'Base TaxJar Configuration'
 
     name = fields.Char()
 
@@ -37,7 +38,7 @@ class BaseAccountTaxJar(models.Model):
                                  'description': category['description'],
                                  'name': category['name'],
                                  'taxjar_id': self.id
-                })
+                                 })
             else:
                 if tax_code.code != category['product_tax_code'] or \
                         tax_code.description != category['description'] or \
@@ -57,23 +58,20 @@ class BaseAccountTaxJar(models.Model):
 
         for nexus in res.data:
             nexus_exist = nexus_region.search(
-                    [('name', '=', 'TaxJar: %s' % nexus['region'])], limit=1)
+                [('name', '=', 'TaxJar: %s' % nexus['region'])], limit=1)
             if not nexus_exist.id:
                 nexus_state = state.search([
                     ('code', '=', nexus['region_code']),
                     ('country_id.code', '=', nexus['country_code'])], limit=1)
                 if nexus_state:
-                    nexus_region.create(
-                        {
-                            'name': nexus['region'],
-                            'state_ids': [(6, 0, nexus_state.ids)],
-                            'country_id': nexus_state.country_id.id,
-                            'auto_apply': True,
-                            'is_nexus': True,
-                            'taxjar_id': self.id
-                         }
-                    )
+                    nexus_region.create({
+                        'name': nexus['region'],
+                        'state_ids': [(6, 0, nexus_state.ids)],
+                        'country_id': nexus_state.country_id.id,
+                        'auto_apply': True,
+                        'is_nexus': True,
+                        'taxjar_id': self.id
+                    })
                 else:
                     raise ValidationError(_("No state found on system"))
         return True
-

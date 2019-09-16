@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <odoo>
     <!-- Copyright 2018 Eficent Business and IT Consulting Services S.L.
-     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+     License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl). -->
     <record model="ir.ui.view" id="view_base_account_taxjar_tree">
         <field name="name">base.account.taxjar.tree</field>
         <field name="model">base.account.taxjar</field>

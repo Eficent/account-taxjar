@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <!-- Copyright 2018 Eficent Business and IT Consulting Services S.L.
-     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+     License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl). -->
     <record id="account_taxjar_product_taxjar_category_form" model="ir.ui.view">
         <field name="name">product.taxjar.category.from</field>
         <field name="model">product.taxjar.category</field>

@@ -1,4 +1,4 @@
-# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
+# License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl.html).
 {
     'name': 'Account TaxJar',
     'version': '11.0.1.0.0',
@@ -8,7 +8,8 @@
               'Odoo Community Association (OCA)',
     "website": "https://www.eficent.com/",
     'depends': [
-        'account_invoicing',
+        'account',
+        'sale_stock_sourcing_address',
     ],
     'external_dependencies': {'python': ['taxjar']},
     'data': [
@@ -22,5 +23,5 @@
     'installable': True,
     'application': True,
     'auto_install': False,
-    'license': 'AGPL-3',
+    'license': 'LGPL-3',
 }

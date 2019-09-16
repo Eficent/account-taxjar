@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <!-- Copyright 2018 Eficent Business and IT Consulting Services S.L.
-     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+     License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl). -->
     <record id="account_position_taxjar_inherit_from_view" model="ir.ui.view">
         <field name="name">account.fiscal.position.form.inherit</field>
         <field name="model">account.fiscal.position</field>
@@ -18,7 +18,6 @@
     <record id="account_taxjar_nexus_tree" model="ir.ui.view">
         <field name="name">account.taxjar.nexus.tree</field>
         <field name="model">account.fiscal.position</field>
-        <field name="domain">[('is_nexus', '=', True)]</field>
         <field name="arch" type="xml">
             <tree create="0">
                 <field name="name"/>
