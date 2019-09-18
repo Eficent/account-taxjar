@@ -4,17 +4,17 @@
 from odoo import api, fields, models, _
 
 
-class ProductTaxJarCategory(models.Model):
-    _name = 'product.taxjar.category'
-    _description = "TaxJar Product Tax Code"
+class TaxJarCategory(models.Model):
+    _name = 'taxjar.category'
+    _description = "TaxJar Tax Code"
     _rec_name = 'code'
 
-    code = fields.Integer(string="Product Tax Code", required=True)
+    code = fields.Char(string="Product Tax Code", required=True)
     description = fields.Char(string="Product Tax Description", required=True)
     name = fields.Char(string="Product Tax Name", required=True)
 
     taxjar_id = fields.Many2one(
-        'base.account.taxjar', 'TaxJar API ID',
+        'taxjar.api', 'TaxJar API ID',
         required=True, ondelete='cascade'
     )
 
@@ -41,17 +41,3 @@ class ProductTaxJarCategory(models.Model):
             res.append((category.id,
                         _('[%s] %s') % (category.code, category.description)))
         return res
-
-
-class ProductTemplate(models.Model):
-    _inherit = 'product.template'
-
-    tax_code_id = fields.Many2one('product.taxjar.category',
-                                  string="TaxJar Product Tax Code")
-
-
-class ProductCategory(models.Model):
-    _inherit = 'product.category'
-
-    tax_code_id = fields.Many2one('product.taxjar.category',
-                                  string="TaxJar Product Tax Code")

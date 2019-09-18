@@ -9,7 +9,7 @@
         <field name="code">
 for order in records:
     if order.fiscal_position_id.is_nexus:
-        order.prepare_taxes_on_order()
+        order.prepare_taxes()
         </field>
         <field name="binding_model_id" ref="sale.model_sale_order"/>
     </record>
@@ -21,7 +21,7 @@ for order in records:
         <field name="arch" type="xml">
             <header position="inside">
                 <field name="show_taxjar_button" invisible="1"/>
-                <button name="prepare_taxes_on_order"
+                <button name="prepare_taxes"
                         string="Update taxes from TaxJar"
                         type="object"
                         attrs="{'invisible': [('show_taxjar_button','=',False)]}"

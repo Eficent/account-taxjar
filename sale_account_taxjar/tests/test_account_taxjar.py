@@ -118,9 +118,10 @@ class TestAccountTaxjar(SingleTransactionCase):
         taxjar_nexus_sourcing.write({'taxable_account_id': self.account.id})
         self.assertEqual(len(taxjar_nexus_sourcing), 6)
 
-    def test_03_account_invoice_validate_on_update_taxjar_taxes(self):
-        self.product_template.tax_code_id = self.env['taxjar.category'].\
-            search([('code', '=', '31000')], limit=1).id
+    def test_03_sale_order_validate_on_update_taxjar_taxes(self):
+        self.product_template.tax_code_id = \
+            self.env['taxjar.category'].search([('code', '=', '31000')],
+                                               limit=1).id
         so = self.env['sale.order'].create({
             'partner_id': self.customer.id,
             'partner_invoice_id': self.customer.id,
@@ -141,18 +142,16 @@ class TestAccountTaxjar(SingleTransactionCase):
         so.onchange_partner_shipping_id()
         # Confirm our standard sale order
         so.action_confirm()
-        invoice = self._create_invoice_from_sale(so)
-        # Updating invoice_line_id for mock response
         with recorder.use_cassette(
-                path='test_03_account_invoice_validate_on_update_taxjar_taxes',
+                path='test_03_sale_order_validate_on_update_taxjar_taxes',
                 before_record_response=scrub_string(
                     'OLD_ACCOUNT_LINE_ID',
-                    str(invoice.invoice_line_ids.id))
+                    str(so.order_line.id))
         ):
-            invoice.prepare_taxes()
-            self.assertEqual(invoice.amount_total, 215.8)
+            so.prepare_taxes()
+            self.assertEqual(so.amount_total, 215.8)
 
-    def test_04_account_invoice_validate_on_update_zero_taxes(self):
+    def test_04_sale_order_validate_on_update_zero_taxes(self):
         self.service_template.tax_code_id = self.env[
             'taxjar.category'].search([('code', '=', '19000')], limit=1).id
         so = self.env['sale.order'].create({
@@ -167,24 +166,18 @@ class TestAccountTaxjar(SingleTransactionCase):
                                    'price_unit': 50.0,
                                    })]})
         taxjar_nexus_sourcing = self.env['taxjar.nexus.sourcing'].search(
-            [('name', 'ilike', self.customer.state_id.name)], limit=1
-        )
+            [('name', 'ilike', self.customer.state_id.name)], limit=1)
         self.afp.taxjar_nexus_sourcing_id = \
             taxjar_nexus_sourcing.id
         # Get fiscal_position_id
         so.onchange_partner_shipping_id()
-        # Confirm our standard sale order
-        so.action_confirm()
-        invoice = self._create_invoice_from_sale(so)
-        # Updating invoice_line_id for mock response
         with recorder.use_cassette(
-                path='test_04_account_invoice_validate_on_update_zero_taxes',
+                path='test_04_sale_order_validate_on_update_zero_taxes',
                 before_record_response=scrub_string(
                     'OLD_ACCOUNT_LINE_ID',
-                    str(invoice.invoice_line_ids.id))
+                    str(so.order_line.id))
         ):
-            invoice.prepare_taxes()
-            self.assertEqual(invoice.amount_total, 50)
-        taxes = invoice.get_taxes_values()
-        self.assertFalse(any('Exempt' not in taxes[t]['name'] for t in taxes))
-        self.assertEqual(len(taxes), 4)
+            so.prepare_taxes()
+            # Confirm our standard sale order
+            so.action_confirm()
+            self.assertEqual(so.amount_total, 50)

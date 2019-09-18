@@ -3,23 +3,14 @@
 # License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl.html).
 import logging
 
-from odoo import api, fields, models, _
-from odoo.exceptions import ValidationError
-from odoo.tools.float_utils import float_round
-from odoo.addons.bus.models.bus import json_dump
-
-from .taxjar_request import TaxJarRequest
+from odoo import models
 
 _logger = logging.getLogger(__name__)
 
 
 class AccountInvoice(models.Model):
     _name = 'account.invoice'
-    _inherit = ['account.invoice', 'taxjar.tax.abstract']
-
-    show_taxjar_button = fields.Boolean(
-        'Hide TaxJar Button',
-        compute='_compute_hide_taxjar_button', default=False)
+    _inherit = ['account.invoice', 'account.taxjar.tax.abstract']
 
     # If we have several warehouses on account_invoice_lines we need to get
     # their related partner.
@@ -36,6 +27,10 @@ class AccountInvoice(models.Model):
                 lambda l: l.warehouse_id.partner_id == from_address):
             lines.append(line)
         return lines
+
+    @staticmethod
+    def _get_price(line):
+        return line.price_unit, line.quantity, line.discount
 
     def prepare_taxes(self):
         super().prepare_taxes()

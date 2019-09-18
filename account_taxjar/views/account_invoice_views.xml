@@ -10,7 +10,7 @@
         <field name="code">
 for invoice in records:
     if invoice.fiscal_position_id.is_nexus:
-        invoice.prepare_taxes_on_invoice()
+        invoice.prepare_taxes()
         </field>
     </record>
 
@@ -21,7 +21,7 @@ for invoice in records:
         <field name="arch" type="xml">
             <header position="inside">
                 <field name="show_taxjar_button" invisible="1"/>
-                <button name="prepare_taxes_on_invoice"
+                <button name="prepare_taxes"
                         string="Update taxes from TaxJar"
                         type="object"
                         attrs="{'invisible': [('show_taxjar_button','=',False)]}"

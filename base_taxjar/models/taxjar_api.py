@@ -1,17 +1,16 @@
 # Copyright 2018-2019 Eficent Business and IT Consulting Services S.L.
 #   (http://www.eficent.com)
 # License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl.html).
-from odoo import api, fields, models, _
-from odoo.exceptions import ValidationError
+from odoo import api, fields, models
 
 from .taxjar_request import TaxJarRequest
 
 
-class BaseAccountTaxJar(models.Model):
-    _name = 'base.account.taxjar'
+class TaxJarAPI(models.Model):
+    _name = 'taxjar.api'
     _description = 'Base TaxJar Configuration'
 
-    name = fields.Char()
+    name = fields.Char('Name')
 
     taxjar_api_url = fields.Char(
         string='TaxJar API URL',
@@ -19,14 +18,10 @@ class BaseAccountTaxJar(models.Model):
     taxjar_api_token = fields.Char(
         string='TaxJar API KEY',
     )
-    taxable_account_id = fields.Many2one(
-        'account.account', string='Taxable Account TaxJar',
-        required=True
-    )
 
     @api.multi
     def sync_taxjar_tax_code(self):
-        tax_code = self.env['product.taxjar.category']
+        tax_code = self.env['taxjar.category']
         request = TaxJarRequest(self.taxjar_api_url, self.taxjar_api_token)
         categories = request.get_product_tax_code()
 
@@ -49,29 +44,22 @@ class BaseAccountTaxJar(models.Model):
                                      'taxjar_id': self.id})
         return True
 
+    def _update_nexus_sourcing(self, nexus):
+        nexus_sourcing = self.env['taxjar.nexus.sourcing']
+        nexus_exist = nexus_sourcing.search(
+            [('name', '=', '[%s]: %s' % (self.name, nexus['region']))],
+            limit=1)
+        if not nexus_exist.id:
+            nexus_sourcing.create({
+                'name': '[%s]: %s' % (self.name, nexus['region']),
+                'taxjar_id': self.id
+            })
+        return True
+
     @api.multi
-    def sync_taxjar_nexus_region(self):
-        nexus_region = self.env['account.fiscal.position']
-        state = self.env['res.country.state']
+    def sync_taxjar_nexus_sourcing(self):
         request = TaxJarRequest(self.taxjar_api_url, self.taxjar_api_token)
         res = request.get_nexus_regions()
-
         for nexus in res.data:
-            nexus_exist = nexus_region.search(
-                [('name', '=', 'TaxJar: %s' % nexus['region'])], limit=1)
-            if not nexus_exist.id:
-                nexus_state = state.search([
-                    ('code', '=', nexus['region_code']),
-                    ('country_id.code', '=', nexus['country_code'])], limit=1)
-                if nexus_state:
-                    nexus_region.create({
-                        'name': nexus['region'],
-                        'state_ids': [(6, 0, nexus_state.ids)],
-                        'country_id': nexus_state.country_id.id,
-                        'auto_apply': True,
-                        'is_nexus': True,
-                        'taxjar_id': self.id
-                    })
-                else:
-                    raise ValidationError(_("No state found on system"))
+            self._update_nexus_sourcing(nexus)
         return True
