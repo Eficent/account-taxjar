@@ -7,8 +7,8 @@ from odoo.exceptions import ValidationError
 from .taxjar_request import TaxJarRequest
 
 
-class BaseAccountTaxJar(models.Model):
-    _name = 'base.account.taxjar'
+class BaseTaxJar(models.Model):
+    _name = 'base.taxjar'
     _description = 'Base TaxJar Configuration'
 
     name = fields.Char()

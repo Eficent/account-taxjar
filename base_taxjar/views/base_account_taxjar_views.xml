@@ -3,8 +3,8 @@
     <!-- Copyright 2018 Eficent Business and IT Consulting Services S.L.
      License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl). -->
     <record model="ir.ui.view" id="view_base_account_taxjar_tree">
-        <field name="name">base.account.taxjar.tree</field>
-        <field name="model">base.account.taxjar</field>
+        <field name="name">base.taxjar.tree</field>
+        <field name="model">base.taxjar</field>
         <field name="type">tree</field>
         <field name="arch" type="xml">
             <tree>
@@ -16,8 +16,8 @@
     </record>
 
     <record model="ir.ui.view" id="view_base_account_taxjar_form">
-        <field name="name">base.account.taxjar.form</field>
-        <field name="model">base.account.taxjar</field>
+        <field name="name">base.taxjar.form</field>
+        <field name="model">base.taxjar</field>
         <field name="arch" type="xml">
             <form string="Account Taxjar API Configuration">
                 <header>
@@ -42,12 +42,12 @@
 
     <record model="ir.actions.act_window" id="action_taxjar">
         <field name="name">Taxjar Configuration</field>
-        <field name="res_model">base.account.taxjar</field>
+        <field name="res_model">base.taxjar</field>
         <field name="view_type">form</field>
         <field name="view_mode">tree,form</field>
         <field name="view_id" ref="view_base_account_taxjar_tree"/>
     </record>
 
-    <menuitem id="menu_account_taxjar" name="TaxJar" parent="base.menu_custom" sequence="6"/>
-    <menuitem id="menu_taxjar_configuration" name="TaxJar Configuration" parent="menu_account_taxjar"  action="action_taxjar" sequence="1"/>
+    <menuitem id="menu_taxjar" name="TaxJar" parent="base.menu_custom" sequence="6"/>
+    <menuitem id="menu_taxjar_configuration" name="TaxJar Configuration" parent="menu_taxjar"  action="action_taxjar" sequence="1"/>
 </odoo>

@@ -62,6 +62,13 @@ class TaxJarTaxAbstract(models.AbstractModel):
         return state_id
 
     @staticmethod
+    def _get_price(line):
+        """
+            :return: partner_id of origin's address.
+        """
+        raise NotImplementedError()
+
+    @staticmethod
     def _prepare_breakdown_rates(item, jur_state, county, city):
         precision = 3
         state_tax_amount = float_round(item['state_sales_tax_rate'] * 100,
@@ -172,6 +179,11 @@ class TaxJarTaxAbstract(models.AbstractModel):
             tax = account_tax.sudo().create(tax_dict)
         return tax
 
+    @staticmethod
+    def _set_tax_ids(line, taxes):
+        """ Set taxes ids for specific models. """
+        raise NotImplementedError()
+
     @api.multi
     def prepare_taxes(self):
         to_address = self._get_to_address()
@@ -188,7 +200,7 @@ class TaxJarTaxAbstract(models.AbstractModel):
         request = TaxJarRequest(api_url, api_token)
 
         for from_address in from_addresses:
-            lines = self._get_lines(from_address)
+            lines = self._get_lines_from_address(from_address)
             if not lines:
                 raise ValidationError(_("Invoice lines not found!"))
             res = self._get_rate(request, lines, to_address, from_address)
@@ -213,11 +225,11 @@ class TaxJarTaxAbstract(models.AbstractModel):
             city = jurisdiction['city'] if 'city' in jurisdiction else ''
             # TODO: Add district IF it is shown by jurisdiction.
             #       it has never been shown in requests before.
-            for index, line in enumerate(self.invoice_line_ids.filtered(
-                    lambda l: l.sourcing_address_id == from_address)):
-                if line.price_unit >= 0.0 and line.quantity >= 0.0:
-                    price = line.price_unit * \
-                        (1 - (line.discount or 0.0) / 100.0) * line.quantity
+            for line in lines:
+                price_unit, quantity, discount = self._get_price(line)
+                if price_unit >= 0.0 and quantity >= 0.0:
+                    price = price_unit * \
+                        (1 - (discount or 0.0) / 100.0) * quantity
                     if price:
                         for item in items:
                             if item['id'] == str(line.id):
@@ -231,8 +243,7 @@ class TaxJarTaxAbstract(models.AbstractModel):
                                     tax = self.update_tax(rate,
                                                           taxable_account_id)
                                     taxes.append(tax)
-                                line.invoice_line_tax_ids = [
-                                    (6, 0, [x.id for x in taxes])]
+                                self._set_tax_ids(line, taxes)
                                 break
         self.with_context(mail_notrack=True).message_post(
             body=_('Successfully updated Taxes from TaxJar'))

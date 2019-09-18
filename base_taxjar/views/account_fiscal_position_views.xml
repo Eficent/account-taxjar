@@ -37,6 +37,6 @@
         <field name="view_id" ref="account_taxjar_nexus_tree"/>
     </record>
 
-    <menuitem action="account_taxjar_nexus_action" id="menu_taxjar_nexus" name="TaxJar Nexus" parent="menu_account_taxjar" sequence="3"/>
+    <menuitem action="account_taxjar_nexus_action" id="menu_taxjar_nexus" name="TaxJar Nexus" parent="menu_taxjar" sequence="3"/>
 
 </odoo>

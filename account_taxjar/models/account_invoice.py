@@ -4,11 +4,6 @@
 import logging
 
 from odoo import api, fields, models, _
-from odoo.exceptions import ValidationError
-from odoo.tools.float_utils import float_round
-from odoo.addons.bus.models.bus import json_dump
-
-from .taxjar_request import TaxJarRequest
 
 _logger = logging.getLogger(__name__)
 
@@ -16,10 +11,6 @@ _logger = logging.getLogger(__name__)
 class AccountInvoice(models.Model):
     _name = 'account.invoice'
     _inherit = ['account.invoice', 'taxjar.tax.abstract']
-
-    show_taxjar_button = fields.Boolean(
-        'Hide TaxJar Button',
-        compute='_compute_hide_taxjar_button', default=False)
 
     # If we have several warehouses on account_invoice_lines we need to get
     # their related partner.
@@ -36,6 +27,15 @@ class AccountInvoice(models.Model):
                 lambda l: l.warehouse_id.partner_id == from_address):
             lines.append(line)
         return lines
+
+    @staticmethod
+    def _get_price(line):
+        return line.price_unit, line.quantity, line.discount
+
+    @staticmethod
+    def _set_tax_ids(line, taxes):
+        line.invoice_line_tax_ids = [
+            (6, 0, [x.id for x in taxes])]
 
     def prepare_taxes(self):
         super().prepare_taxes()

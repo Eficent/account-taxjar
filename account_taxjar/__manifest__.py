@@ -8,17 +8,10 @@
               'Odoo Community Association (OCA)',
     "website": "https://www.eficent.com/",
     'depends': [
-        'account',
-        'sale_stock_sourcing_address',
+        'base_taxjar',
     ],
-    'external_dependencies': {'python': ['taxjar']},
     'data': [
-        'security/ir.model.access.csv',
-        'data/account_tax_group.xml',
-        'views/base_account_taxjar_views.xml',
-        'views/account_fiscal_position_views.xml',
         'views/account_invoice_views.xml',
-        'views/product_taxjar_category_views.xml',
     ],
     'installable': True,
     'application': True,

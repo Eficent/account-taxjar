@@ -50,7 +50,7 @@
         <field name="view_id" ref="account_taxjar_product_taxjar_category_tree"/>
     </record>
 
-    <menuitem action="account_taxjar_product_taxjar_category_action" id="menu_taxjar_categories" parent="menu_account_taxjar" sequence="2"/>
+    <menuitem action="account_taxjar_product_taxjar_category_action" id="menu_taxjar_categories" parent="menu_taxjar" sequence="2"/>
 
     <record id="product_template_taxjar_inherit_form" model="ir.ui.view">
         <field name="name">product.template.form.inherit</field>

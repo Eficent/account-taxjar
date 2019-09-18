@@ -10,9 +10,8 @@
               'Odoo Community Association (OCA)',
     "website": "https://www.eficent.com/",
     'depends': [
-        'account_taxjar',
+        'base_taxjar',
         'sale',
-        'sale_stock_sourcing_address',
     ],
     'data': [
         'views/sale_order_views.xml',

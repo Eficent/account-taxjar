@@ -1,212 +1,33 @@
 # Copyright 2018 Eficent Business and IT Consulting Services S.L.
 #   (http://www.eficent.com)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
-from odoo import api, fields, models, _
-from odoo.tools.float_utils import float_round
-from odoo.exceptions import ValidationError
-
-from odoo.addons.account_taxjar.models.taxjar_request import TaxJarRequest
+from odoo import models
 
 
 class SaleOrder(models.Model):
-    _inherit = 'sale.order'
-
-    show_taxjar_button = fields.Boolean(
-        'Hide TaxJar Button',
-        compute='_compute_hide_taxjar_button', default=False)
-
-    @api.depends('fiscal_position_id', 'state')
-    def _compute_hide_taxjar_button(self):
-        for rec in self:
-            if rec.state == 'draft' and rec.fiscal_position_id.taxjar_id:
-                rec.show_taxjar_button = True
-
-    @staticmethod
-    def _get_rate(request, lines, from_address, to_address):
-        try:
-            res = request.get_rate(lines, from_address, to_address)
-        except Exception as e:
-            raise ValidationError(_("TaxJar SmartCalc API Error: "+str(e)))
-        return res
+    _name = 'sale.order'
+    _inherit = ['sale.order', 'taxjar.tax.abstract']
 
     def _get_to_address(self):
         return self.partner_shipping_id
 
-    def _get_lines(self):
+    def _get_from_addresses(self):
+        from_addresses = list(
+            set(self.order_line.mapped('sourcing_address_id')))
+        return from_addresses or [self.company_id.partner_id]
+
+    def _get_lines_from_address(self, from_address):
         lines = []
-        for line in self.order_line:
+        for line in self.order_line.filtered(
+                lambda l: l.warehouse_id.partner_id == from_address):
             lines.append(line)
         return lines
 
-    def _get_from_addresses(self):
-        from_addresses = self.order_line.mapped('sourcing_address_id')
-        return from_addresses or [self.company_id.partner_id]
-
-    def _get_jurisdiction_state(self, jurisdiction):
-        state_id = self.env['res.country.state'].search([
-            ('code', '=', jurisdiction['state']),
-            ('country_id.code', '=', jurisdiction['country'])
-        ])
-        return state_id
+    @staticmethod
+    def _get_price(line):
+        return line.price_unit, line.product_uom_qty, line.discount
 
     @staticmethod
-    def _prepare_breakdown_rates(item, jur_state, county, city):
-        precision = 3
-        state_tax_amount = float_round(item['state_sales_tax_rate'] * 100,
-                                       precision_digits=precision)
-        county_tax_amount = float_round(item['county_tax_rate'] * 100,
-                                        precision_digits=precision)
-        city_tax_amount = float_round(item['city_tax_rate'] * 100,
-                                      precision_digits=precision)
-        special_tax_amount = float_round(item['special_tax_rate'] * 100,
-                                         precision_digits=precision)
-        res = []
-        if state_tax_amount:
-            res.append({
-                'name': 'State Tax: %s: %.3f %%' % (
-                    jur_state.code, state_tax_amount),
-                'amount': state_tax_amount,
-                'state_id': jur_state.id,
-                'tax_group': 'account_taxjar.tax_group_taxjar_state'
-            })
-        else:
-            res.append({
-                'name': 'State Tax Exempt',
-                'amount': 0.0,
-                'tax_group': 'account_taxjar.tax_group_taxjar_state'
-            })
-        if county_tax_amount:
-            res.append({
-                'name': 'County Tax: %s/%s %.3f %%' % (
-                    jur_state.code, county, county_tax_amount),
-                'amount': county_tax_amount,
-                'county': county,
-                'state_id': jur_state.id,
-                'tax_group': 'account_taxjar.tax_group_taxjar_county'
-            })
-        else:
-            res.append({
-                'name': 'County Tax Exempt',
-                'amount': 0.0,
-                'tax_group': 'account_taxjar.tax_group_taxjar_county'
-            })
-        if city_tax_amount:
-            res.append({
-                'name': 'City Tax: %s/%s/%s %.3f %%' % (
-                    city, county, jur_state.code, city_tax_amount),
-                'amount': city_tax_amount,
-                'city': city,
-                'county': county,
-                'state_id': jur_state.id,
-                'tax_group': 'account_taxjar.tax_group_taxjar_city'
-
-            })
-        else:
-            res.append({
-                'name': 'City Tax Exempt',
-                'amount': 0.0,
-                'tax_group': 'account_taxjar.tax_group_taxjar_city'
-            })
-        if special_tax_amount:
-            res.append({
-                'name': 'Special District Tax: %s/%s/%s %.3f %%' % (
-                    city, county, jur_state.code, special_tax_amount),
-                'amount': special_tax_amount,
-                'city': city,
-                'county': county,
-                'state_id': jur_state.id,
-                'tax_group': 'account_taxjar.tax_group_taxjar_district'
-            })
-        else:
-            res.append({
-                'name': 'District Tax Exempt',
-                'amount': 0.0,
-                'tax_group': 'account_taxjar.tax_group_taxjar_district'
-            })
-        return res
-
-    def update_tax(self, tax, taxable_account_id):
-        city = tax['city'] if 'city' in tax else False
-        county = tax['county'] if 'county' in tax else False
-        state_id = tax['state_id'] if 'state_id' in tax else False
-        account_tax = self.env['account.tax']
-        amount = tax['amount']
-        name = tax['name']
-        tax_group = tax['tax_group']
-        domain = [('name', '=', name),
-                  ('state_id', '=', state_id),
-                  ('amount', '=', amount),
-                  ('amount_type', '=', 'percent'),
-                  ('type_tax_use', '=', 'sale'),
-                  ('city', '=', city),
-                  ('county', '=', county),
-                  ('account_id', '=', taxable_account_id)]
-
-        tax = account_tax.sudo().search(domain, limit=1)
-        if not tax:
-            tax_dict = {
-                'name': name,
-                'amount': amount,
-                'amount_type': 'percent',
-                'type_tax_use': 'sale',
-                'description': name,
-                'account_id': taxable_account_id,
-                'state_id': state_id,
-                'city': city,
-                'county': county,
-                'tax_group_id': self.env.ref(tax_group).id
-            }
-            tax = account_tax.sudo().create(tax_dict)
-        return tax
-
-    # TODO: Split functions and refactor duplicities
-    @api.multi
-    def prepare_taxes_on_order(self):
-        to_address = self._get_to_address()
-        from_addresses = self._get_from_addresses()
-        lines = self._get_lines()
-        if not from_addresses or not to_address or not lines:
-            raise ValidationError(_("Request cannot be executed due to: "
-                                    "company, partner, nexus or lines"
-                                    "don't exist"))
-
-        taxjar_id = self.fiscal_position_id.taxjar_id
-        taxable_account_id = taxjar_id.taxable_account_id.id
-        api_url = taxjar_id.taxjar_api_url
-        api_token = taxjar_id.taxjar_api_token
-        request = TaxJarRequest(api_url, api_token)
-
-        for from_address in from_addresses:
-            res = self._get_rate(request, lines, to_address, from_address)
-            items = res['breakdown']['line_items'] \
-                if 'breakdown' in res else {}
-            jurisdiction = res['jurisdictions'] \
-                if 'jurisdictions' in res else {}
-            jur_state = self._get_jurisdiction_state(jurisdiction)
-            county = jurisdiction['county'] \
-                if 'county' in jurisdiction else ''
-            city = jurisdiction['city'] if 'city' in jurisdiction else ''
-            # TODO: Add district IF it is shown by jurisdiction.
-
-            for index, line in enumerate(self.order_line.filtered(
-                    lambda l: l.sourcing_address_id == from_address)):
-                if line.price_unit >= 0.0 and line.product_uom_qty >= 0.0:
-                    price = line.price_unit * \
-                            (1 - (line.discount or 0.0) / 100.0) * \
-                            line.product_uom_qty
-                    if price:
-                        # Improve style, for + filter instead of 2 lines above
-                        for item in items:
-                            if item['id'] == str(line.id):
-                                rates = self._prepare_breakdown_rates(
-                                    item, jur_state, county, city)
-                                taxes = []
-                                for rate in rates:
-                                    tax = self.update_tax(rate,
-                                                          taxable_account_id)
-                                    taxes.append(tax)
-                                line.tax_id = [
-                                    (6, 0, [x.id for x in taxes])]
-        self.with_context(mail_notrack=True).message_post(
-            body=_('Successfully updated Taxes from TaxJar'))
-        return True
+    def _set_tax_ids(line, taxes):
+        line.tax_id = [
+            (6, 0, [x.id for x in taxes])]

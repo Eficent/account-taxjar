@@ -20,6 +20,4 @@ class AccountFiscalPosition(models.Model):
         if self.is_nexus:
             return self.env['account.tax'].browse()
         else:
-            return super(AccountFiscalPosition, self).map_tax(taxes,
-                                                              product=product,
-                                                              partner=partner)
+            return super().map_tax(taxes, product=product, partner=partner)
