@@ -1,7 +1,9 @@
-# License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl.html).
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 {
     'name': 'Account TaxJar',
-    'version': '11.0.1.0.0',
+    'version': '12.0.1.0.0',
+    'development_status': 'alpha',
+    "maintainers": ['hveficent'],
     'category': 'Account',
     'summary': 'TaxJar SmartCalc API integration on Sale Invoices',
     'author': 'Eficent, '
@@ -13,15 +15,18 @@
     ],
     'external_dependencies': {'python': ['taxjar']},
     'data': [
-        'security/ir.model.access.csv',
         'data/account_tax_group.xml',
-        'views/base_account_taxjar_views.xml',
-        'views/account_fiscal_position_views.xml',
+        'security/ir.model.access.csv',
+        'views/account_fiscal_position.xml',
         'views/account_invoice_views.xml',
-        'views/product_taxjar_category_views.xml',
+        'views/account_tax_views.xml',
+        'views/product_views.xml',
+        'views/taxjar_api_key_views.xml',
+        'views/taxjar_nexus_sourcing_views.xml',
+        'views/taxjar_category_views.xml',
     ],
     'installable': True,
-    'application': True,
+    'application': False,
     'auto_install': False,
-    'license': 'LGPL-3',
+    'license': 'AGPL-3',
 }

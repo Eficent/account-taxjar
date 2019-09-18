@@ -1,3 +1,4 @@
-- [x] Consider Logistic Routes to determine from address jurisditions
-- [ ] Improve Tax Calculations with onchanges.
-- [x] Move TaxJar Configuration to Settings.
+* Adapt code to specific Sourcing Type, for the moment, we trust TaxJar API,
+  sourcing type can be avoidable.
+
+`read more <https://blog.taxjar.com/charging-sales-tax-rates/>`_

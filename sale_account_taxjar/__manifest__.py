@@ -3,7 +3,9 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 {
     'name': 'Sale Account TaxJar',
-    'version': '11.0.1.0.0',
+    'version': '12.0.1.0.0',
+    'development_status': 'alpha',
+    "maintainers": ['hveficent'],
     'category': 'Account',
     'summary': 'TaxJar SmartCalc API integration on Sale Orders',
     'author': 'Eficent, '
@@ -11,8 +13,7 @@
     "website": "https://www.eficent.com/",
     'depends': [
         'account_taxjar',
-        'sale',
-        'sale_stock_sourcing_address',
+        'sale_management',
     ],
     'data': [
         'views/sale_order_views.xml',

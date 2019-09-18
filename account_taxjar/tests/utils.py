@@ -1,6 +1,6 @@
 # Copyright 2019 Eficent Business and IT Consulting Services S.L.
 # - (https://www.eficent.com)
-# License LGPL-3.0 or later (https://www.gnu.org/licenses/lgpl.html).
+# License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html).
 
 
 def scrub_string(string, replacement):

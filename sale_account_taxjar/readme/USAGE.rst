@@ -6,7 +6,6 @@ To use TaxJar tax calculation on a sale order, let's:
   and this one is a Nexus one, otherwise no TaxJar Calculation will be
   executed.
 
-* Select a Product that has an TaxJar Category associated.
 
 Taxes will automatically generate when Sale Order is confirm or using action
 Update taxes with TaxJar

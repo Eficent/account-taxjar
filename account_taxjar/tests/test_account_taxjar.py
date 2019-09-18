@@ -1,6 +1,6 @@
 # Copyright 2018-2019 Eficent Business and IT Consulting Services S.L.
 # - (https://www.eficent.com)
-# License LGPL-3.0 or later (https://www.gnu.org/licenses/lgpl.html).
+# License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html).
 import logging
 from os.path import dirname, join
 from odoo.tests import SingleTransactionCase
@@ -49,12 +49,23 @@ class TestAccountTaxjar(SingleTransactionCase):
             'user_type_id': self.account_type.id,
             'reconcile': True,
         })
+
+        self.journal_sale = self.env['account.journal'].create(
+            {'name': 'Test Sale Journal',
+             'code': 'TSJ',
+             'type': 'sale'
+             })
+
+        self.afp = self.env['account.fiscal.position'].create({
+            'name': 'Colorado',
+            'state_ids': [(6, 0, [self.state_CO.id])],
+            'auto_apply': True,
+        })
         # Create TaxJar Configuration
-        self.taxjar = self.env['base.account.taxjar'].create({
+        self.taxjar = self.env['taxjar.api.key'].create({
             'name': 'TaxJar',
             'taxjar_api_url': 'https://api.sandbox.taxjar.com',
             'taxjar_api_token': 'token_pride',
-            'taxable_account_id': self.account.id
         })
 
         self.customer = self.env['res.partner'].create({
@@ -93,6 +104,7 @@ class TestAccountTaxjar(SingleTransactionCase):
             'active_id': sale.id,
             'active_ids': sale.ids,
             'active_model': 'sale.order',
+            'default_journal_id': self.journal_sale.id,
             'open_invoices': True,
         }
         res = payment.with_context(sale_context).create_invoices()
@@ -101,21 +113,21 @@ class TestAccountTaxjar(SingleTransactionCase):
     @recorder.use_cassette()
     def test_01_sync_taxjar_tax_code(self):
         self.taxjar.sync_taxjar_tax_code()
-        taxjar_tax_codes = self.env['product.taxjar.category'].search(
+        taxjar_tax_codes = self.env['taxjar.category'].search(
             [('taxjar_id', '=', self.taxjar.id)])
         self.assertEqual(len(taxjar_tax_codes), 29)
 
     @recorder.use_cassette()
     def test_02_sync_taxjar_nexus_region(self):
-        self.taxjar.sync_taxjar_nexus_region()
-        taxjar_nexus_region = self.env['account.fiscal.position'].search(
+        self.taxjar.sync_taxjar_nexus_sourcing()
+        taxjar_nexus_sourcing = self.env['taxjar.nexus.sourcing'].search(
             [('taxjar_id', '=', self.taxjar.id)])
-        self.assertEqual(len(taxjar_nexus_region), 6)
+        taxjar_nexus_sourcing.write({'taxable_account_id': self.account.id})
+        self.assertEqual(len(taxjar_nexus_sourcing), 6)
 
-    def test_03_account_invoice_validate_on_update_taxjar_taxes(self):
-        self.product_template.tax_code_id = self.env[
-            'product.taxjar.category'].search([('code', '=', '31000')],
-                                              limit=1).id
+    def test_03_validate_on_update_taxjar_taxes(self):
+        self.product_template.tax_code_id = self.env['taxjar.category'].\
+            search([('code', '=', '31000')], limit=1).id
         so = self.env['sale.order'].create({
             'partner_id': self.customer.id,
             'partner_invoice_id': self.customer.id,
@@ -127,15 +139,19 @@ class TestAccountTaxjar(SingleTransactionCase):
                                    'product_uom': self.uom_unit.id,
                                    'price_unit': 200.0,
                                    })]})
+        taxjar_nexus_sourcing = self.env['taxjar.nexus.sourcing'].search(
+            [('name', 'ilike', self.customer.state_id.name)], limit=1
+        )
+        self.afp.taxjar_nexus_sourcing_id = \
+            taxjar_nexus_sourcing.id
         # Get fiscal_position_id
         so.onchange_partner_shipping_id()
-        self.assertEqual(so.fiscal_position_id.is_nexus, True)
         # Confirm our standard sale order
         so.action_confirm()
         invoice = self._create_invoice_from_sale(so)
         # Updating invoice_line_id for mock response
         with recorder.use_cassette(
-                path='test_03_account_invoice_validate_on_update_taxjar_taxes',
+                path='test_03_validate_on_update_taxjar_taxes',
                 before_record_response=scrub_string(
                     'OLD_ACCOUNT_LINE_ID',
                     str(invoice.invoice_line_ids.id))
@@ -143,10 +159,9 @@ class TestAccountTaxjar(SingleTransactionCase):
             invoice.prepare_taxes()
             self.assertEqual(invoice.amount_total, 215.8)
 
-    def test_04_account_invoice_validate_on_update_zero_taxes(self):
+    def test_04_validate_on_update_zero_taxes(self):
         self.service_template.tax_code_id = self.env[
-            'product.taxjar.category'].search([('code', '=', '19000')],
-                                              limit=1).id
+            'taxjar.category'].search([('code', '=', '19000')], limit=1).id
         so = self.env['sale.order'].create({
             'partner_id': self.customer.id,
             'partner_invoice_id': self.customer.id,
@@ -158,15 +173,19 @@ class TestAccountTaxjar(SingleTransactionCase):
                                    'product_uom': self.uom_unit.id,
                                    'price_unit': 50.0,
                                    })]})
+        taxjar_nexus_sourcing = self.env['taxjar.nexus.sourcing'].search(
+            [('name', 'ilike', self.customer.state_id.name)], limit=1
+        )
+        self.afp.taxjar_nexus_sourcing_id = \
+            taxjar_nexus_sourcing.id
         # Get fiscal_position_id
         so.onchange_partner_shipping_id()
-        self.assertEqual(so.fiscal_position_id.is_nexus, True)
         # Confirm our standard sale order
         so.action_confirm()
         invoice = self._create_invoice_from_sale(so)
         # Updating invoice_line_id for mock response
         with recorder.use_cassette(
-                path='test_04_account_invoice_validate_on_update_zero_taxes',
+                path='test_04_validate_on_update_zero_taxes',
                 before_record_response=scrub_string(
                     'OLD_ACCOUNT_LINE_ID',
                     str(invoice.invoice_line_ids.id))

@@ -7,22 +7,23 @@ Account TaxJar
    !! changes will be overwritten.                   !!
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-.. |badge1| image:: https://img.shields.io/badge/maturity-Beta-yellow.png
-    :target: https://odoo-community.org/page/development-status
-    :alt: Beta
-.. |badge2| image:: https://img.shields.io/badge/licence-LGPL--3-blue.png
-    :target: http://www.gnu.org/licenses/lgpl-3.0-standalone.html
-    :alt: License: LGPL-3
-.. |badge3| image:: https://img.shields.io/badge/github-Eficent%2Faccount_taxjar-lightgray.png?logo=github
-    :target: https://github.com/Eficent/account_taxjar/tree/12.0/account_taxjar
-    :alt: Eficent/account_taxjar
+.. |badge1| image:: https://img.shields.io/badge/licence-AGPL--3-blue.png
+    :target: http://www.gnu.org/licenses/agpl-3.0-standalone.html
+    :alt: License: AGPL-3
+.. |badge2| image:: https://img.shields.io/badge/github-OCA%2Fl10n--usa-lightgray.png?logo=github
+    :target: https://github.com/OCA/l10n-usa/tree/12.0/account_taxjar
+    :alt: OCA/l10n-usa
+.. |badge3| image:: https://img.shields.io/badge/weblate-Translate%20me-F47D42.png
+    :target: https://translation.odoo-community.org/projects/l10n-usa-12-0/l10n-usa-12-0-account_taxjar
+    :alt: Translate me on Weblate
+.. |badge4| image:: https://img.shields.io/badge/runbot-Try%20me-875A7B.png
+    :target: https://runbot.odoo-community.org/runbot/203/12.0
+    :alt: Try me on Runbot
 
-|badge1| |badge2| |badge3|
+|badge1| |badge2| |badge3| |badge4| 
 
 This module allow to automate your sales taxes on invoices calculation using
 `TaxJar SmartCalcs API <https://www.taxjar.com/smartcalcs/>`_.
-
-
 
 This module does:
 
@@ -41,39 +42,14 @@ This module does't:
 .. contents::
    :local:
 
-Configuration
-=============
-
-Once module is installed, you need to:
-
-* Configure TaxJar API access on Technical Settings > TaxJar Configuration
-
-.. image:: https://raw.githubusercontent.com/Eficent/account_taxjar/12.0/account_taxjar/static/img/taxjar_configuration.png
-   :width: 80 %
-   :align: center
-
-* Import/update TaxJar Categories to import Product Tax Category Codes,
-  see them on Technical Settings > TaxJar Categories
-
-* Import/update Taxjar Nexus (ak. Fiscal Position on Odoo) to import Nexus
-  you have setup in TaxJar Dashboard, see them on Technical Settings >
-  TaxJar Nexus
-
-.. image:: https://raw.githubusercontent.com/Eficent/account_taxjar/12.0/account_taxjar/static/img/taxjar_nexus.png
-   :width: 80 %
-   :align: center
-
-** You must configure manually Sourcing Type...
-`read more <https://blog.taxjar.com/charging-sales-tax-rates/>`_
-
 Usage
 =====
 
-To enable TaxJar tax calculation on specific products, you must:
+To enable TaxJar special tax calculation on specific products, you must:
 
 * Go to Product Form > Invoicing Tab > Select a TaxJar Category.
 
-.. image:: https://raw.githubusercontent.com/Eficent/account_taxjar/12.0/account_taxjar/static/img/select_taxjar_product_category.png
+.. image:: https://raw.githubusercontent.com/OCA/l10n-usa/12.0/account_taxjar/static/img/select_taxjar_product_category.png
    :width: 80 %
    :align: center
 
@@ -82,10 +58,9 @@ To use TaxJar tax calculation on a invoice order, let's:
 * Go to Invoicing > Sales > Customer Invoice and create an entry.
 
 * You must ensure that selected customer has an associated Fiscal Position
-  and this one is a Nexus one, otherwise no TaxJar Calculation will be
+  and this one is a Nexus one, otherwise TaxJar Calculation won't be
   executed.
 
-* Select a Product that has an TaxJar Category associated.
 
 Taxes will automatically generate when Invoice is validated or using
 action Update taxes with TaxJar.
@@ -93,24 +68,25 @@ action Update taxes with TaxJar.
 Notice that Update taxes with TaxJar action can be performed for multiple
 records on a tree view.
 
-.. image:: https://raw.githubusercontent.com/Eficent/account_taxjar/12.0/account_taxjar/static/img/taxjar_account_invoice.png
+.. image:: https://raw.githubusercontent.com/OCA/l10n-usa/12.0/account_taxjar/static/img/taxjar_account_invoice.png
    :width: 80 %
    :align: center
 
 Known issues / Roadmap
 ======================
 
-- [x] Consider Logistic Routes to determine from address jurisditions
-- [ ] Improve Tax Calculations with onchanges.
-- [x] Move TaxJar Configuration to Settings.
+* Adapt code to specific Sourcing Type, for the moment, we trust TaxJar API,
+  sourcing type can be avoidable.
+
+`read more <https://blog.taxjar.com/charging-sales-tax-rates/>`_
 
 Bug Tracker
 ===========
 
-Bugs are tracked on `GitHub Issues <https://github.com/Eficent/account_taxjar/issues>`_.
+Bugs are tracked on `GitHub Issues <https://github.com/OCA/l10n-usa/issues>`_.
 In case of trouble, please check there if your issue has already been reported.
 If you spotted it first, help us smashing it by providing a detailed and welcomed
-`feedback <https://github.com/Eficent/account_taxjar/issues/new?body=module:%20account_taxjar%0Aversion:%2012.0%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**>`_.
+`feedback <https://github.com/OCA/l10n-usa/issues/new?body=module:%20account_taxjar%0Aversion:%2012.0%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**>`_.
 
 Do not contact contributors directly about support or help with technical issues.
 
@@ -130,8 +106,24 @@ Contributors
 Maintainers
 ~~~~~~~~~~~
 
-This module is maintained by the Eficent.
+This module is maintained by the OCA.
 
-This module is part of the `Eficent/account_taxjar <https://github.com/Eficent/account_taxjar/tree/12.0/account_taxjar>`_ project on GitHub.
+.. image:: https://odoo-community.org/logo.png
+   :alt: Odoo Community Association
+   :target: https://odoo-community.org
+
+OCA, or the Odoo Community Association, is a nonprofit organization whose
+mission is to support the collaborative development of Odoo features and
+promote its widespread use.
+
+.. |maintainer-hveficent| image:: https://github.com/hveficent.png?size=40px
+    :target: https://github.com/hveficent
+    :alt: hveficent
+
+Current `maintainer <https://odoo-community.org/page/maintainer-role>`__:
+
+|maintainer-hveficent| 
+
+This module is part of the `OCA/l10n-usa <https://github.com/OCA/l10n-usa/tree/12.0/account_taxjar>`_ project on GitHub.
 
 You are welcome to contribute. To learn how please visit https://odoo-community.org/page/Contribute.
