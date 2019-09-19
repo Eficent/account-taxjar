@@ -3,8 +3,8 @@
     <!-- Copyright 2018 Eficent Business and IT Consulting Services S.L.
      License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl). -->
     <record model="ir.ui.view" id="view_base_account_taxjar_tree">
-        <field name="name">base.taxjar.tree</field>
-        <field name="model">base.taxjar</field>
+        <field name="name">taxjar.api.tree</field>
+        <field name="model">taxjar.api</field>
         <field name="type">tree</field>
         <field name="arch" type="xml">
             <tree>
@@ -16,8 +16,8 @@
     </record>
 
     <record model="ir.ui.view" id="view_base_account_taxjar_form">
-        <field name="name">base.taxjar.form</field>
-        <field name="model">base.taxjar</field>
+        <field name="name">taxjar.api.form</field>
+        <field name="model">taxjar.api</field>
         <field name="arch" type="xml">
             <form string="Account Taxjar API Configuration">
                 <header>
@@ -28,7 +28,6 @@
                     <group>
                         <group>
                             <field name="name"/>
-                            <field name="taxable_account_id"/>
                         </group>
                         <group>
                             <field name="taxjar_api_url"/>
@@ -42,7 +41,7 @@
 
     <record model="ir.actions.act_window" id="action_taxjar">
         <field name="name">Taxjar Configuration</field>
-        <field name="res_model">base.taxjar</field>
+        <field name="res_model">taxjar.api</field>
         <field name="view_type">form</field>
         <field name="view_mode">tree,form</field>
         <field name="view_id" ref="view_base_account_taxjar_tree"/>

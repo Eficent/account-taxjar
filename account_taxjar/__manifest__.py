@@ -9,9 +9,13 @@
     "website": "https://www.eficent.com/",
     'depends': [
         'base_taxjar',
+        'account',
+        'sale_stock_sourcing_address',
     ],
     'data': [
+        'data/account_tax_group.xml',
         'views/account_invoice_views.xml',
+        'views/product_views.xml',
     ],
     'installable': True,
     'application': True,

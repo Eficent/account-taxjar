@@ -49,12 +49,17 @@ class TestAccountTaxjar(SingleTransactionCase):
             'user_type_id': self.account_type.id,
             'reconcile': True,
         })
+
+        self.afp = self.env['account.fiscal.position'].create({
+            'name': 'Colorado',
+            'state_ids': [(6, 0, [self.state_CO.id])],
+            'auto_apply': True,
+        })
         # Create TaxJar Configuration
-        self.taxjar = self.env['base.account.taxjar'].create({
+        self.taxjar = self.env['taxjar.api'].create({
             'name': 'TaxJar',
             'taxjar_api_url': 'https://api.sandbox.taxjar.com',
             'taxjar_api_token': 'token_pride',
-            'taxable_account_id': self.account.id
         })
 
         self.customer = self.env['res.partner'].create({
@@ -101,21 +106,21 @@ class TestAccountTaxjar(SingleTransactionCase):
     @recorder.use_cassette()
     def test_01_sync_taxjar_tax_code(self):
         self.taxjar.sync_taxjar_tax_code()
-        taxjar_tax_codes = self.env['product.taxjar.category'].search(
+        taxjar_tax_codes = self.env['taxjar.category'].search(
             [('taxjar_id', '=', self.taxjar.id)])
         self.assertEqual(len(taxjar_tax_codes), 29)
 
     @recorder.use_cassette()
     def test_02_sync_taxjar_nexus_region(self):
-        self.taxjar.sync_taxjar_nexus_region()
-        taxjar_nexus_region = self.env['account.fiscal.position'].search(
+        self.taxjar.sync_taxjar_nexus_sourcing()
+        taxjar_nexus_sourcing = self.env['taxjar.nexus.sourcing'].search(
             [('taxjar_id', '=', self.taxjar.id)])
-        self.assertEqual(len(taxjar_nexus_region), 6)
+        taxjar_nexus_sourcing.write({'taxable_account_id': self.account.id})
+        self.assertEqual(len(taxjar_nexus_sourcing), 6)
 
     def test_03_account_invoice_validate_on_update_taxjar_taxes(self):
-        self.product_template.tax_code_id = self.env[
-            'product.taxjar.category'].search([('code', '=', '31000')],
-                                              limit=1).id
+        self.product_template.tax_code_id = self.env['taxjar.category'].\
+            search([('code', '=', '31000')], limit=1).id
         so = self.env['sale.order'].create({
             'partner_id': self.customer.id,
             'partner_invoice_id': self.customer.id,
@@ -127,9 +132,13 @@ class TestAccountTaxjar(SingleTransactionCase):
                                    'product_uom': self.uom_unit.id,
                                    'price_unit': 200.0,
                                    })]})
+        taxjar_nexus_sourcing = self.env['taxjar.nexus.sourcing'].search(
+            [('name', 'ilike', self.customer.state_id.name)], limit=1
+        )
+        self.afp.taxjar_nexus_sourcing_id = \
+            taxjar_nexus_sourcing.id
         # Get fiscal_position_id
         so.onchange_partner_shipping_id()
-        self.assertEqual(so.fiscal_position_id.is_nexus, True)
         # Confirm our standard sale order
         so.action_confirm()
         invoice = self._create_invoice_from_sale(so)
@@ -145,8 +154,7 @@ class TestAccountTaxjar(SingleTransactionCase):
 
     def test_04_account_invoice_validate_on_update_zero_taxes(self):
         self.service_template.tax_code_id = self.env[
-            'product.taxjar.category'].search([('code', '=', '19000')],
-                                              limit=1).id
+            'taxjar.category'].search([('code', '=', '19000')], limit=1).id
         so = self.env['sale.order'].create({
             'partner_id': self.customer.id,
             'partner_invoice_id': self.customer.id,
@@ -158,9 +166,13 @@ class TestAccountTaxjar(SingleTransactionCase):
                                    'product_uom': self.uom_unit.id,
                                    'price_unit': 50.0,
                                    })]})
+        taxjar_nexus_sourcing = self.env['taxjar.nexus.sourcing'].search(
+            [('name', 'ilike', self.customer.state_id.name)], limit=1
+        )
+        self.afp.taxjar_nexus_sourcing_id = \
+            taxjar_nexus_sourcing.id
         # Get fiscal_position_id
         so.onchange_partner_shipping_id()
-        self.assertEqual(so.fiscal_position_id.is_nexus, True)
         # Confirm our standard sale order
         so.action_confirm()
         invoice = self._create_invoice_from_sale(so)

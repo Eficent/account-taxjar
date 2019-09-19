@@ -4,9 +4,9 @@
 from odoo import fields, models
 
 
-class AccountTax(models.Model):
-    _inherit = 'account.tax'
+class TaxJarNexusSourcing(models.Model):
+    _inherit = 'taxjar.nexus.sourcing'
 
-    state_id = fields.Many2one('res.country.state')
-    county = fields.Char()
-    city = fields.Char()
+    taxable_account_id = fields.Many2one(
+        'account.account', string='Taxable Account TaxJar',
+    )

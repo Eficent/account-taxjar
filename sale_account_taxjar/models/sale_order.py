@@ -6,7 +6,7 @@ from odoo import models
 
 class SaleOrder(models.Model):
     _name = 'sale.order'
-    _inherit = ['sale.order', 'taxjar.tax.abstract']
+    _inherit = ['sale.order', 'account.taxjar.tax.abstract']
 
     def _get_to_address(self):
         return self.partner_shipping_id
