@@ -1,0 +1,45 @@
+---Models in module 'account_taxjar'---
+obsolete model base.account.taxjar
+obsolete model product.taxjar.category (renamed to taxjar.category)
+new model account.taxjar.tax.abstract [abstract]
+---Fields in module 'account_taxjar'---
+account_taxjar / account.fiscal.position  / is_nexus (boolean)            : DEL
+account_taxjar / account.fiscal.position  / sourcing_type (selection)     : DEL selection_keys: ['destination', 'origin']
+account_taxjar / account.fiscal.position  / taxjar_id (many2one)          : DEL relation: base.account.taxjar
+account_taxjar / account.fiscal.position  / taxjar_nexus_sourcing_id (many2one): NEW relation: taxjar.nexus.sourcing
+account_taxjar / base.account.taxjar      / name (char)                   : DEL
+account_taxjar / base.account.taxjar      / taxable_account_id (many2one) : DEL relation: account.account, required
+account_taxjar / base.account.taxjar      / taxjar_api_token (char)       : DEL
+account_taxjar / base.account.taxjar      / taxjar_api_url (char)         : DEL
+account_taxjar / product.category         / tax_code_id (many2one)        : relation is now 'taxjar.category' ('product.taxjar.category') [nothing to do]
+account_taxjar / product.product          / tax_code_id (many2one)        : relation is now 'taxjar.category' ('product.taxjar.category') [nothing to do]
+account_taxjar / product.taxjar.category  / __last_update (datetime)      : module is now 'base_taxjar' ('account_taxjar')
+account_taxjar / product.taxjar.category  / code (integer)                : type is now 'char' ('integer')
+account_taxjar / product.taxjar.category  / description (char)            : module is now 'base_taxjar' ('account_taxjar')
+account_taxjar / product.taxjar.category  / display_name (char)           : module is now 'base_taxjar' ('account_taxjar')
+account_taxjar / product.taxjar.category  / name (char)                   : module is now 'base_taxjar' ('account_taxjar')
+account_taxjar / product.taxjar.category  / taxjar_id (many2one)          : module is now 'base_taxjar' ('account_taxjar')
+account_taxjar / product.taxjar.category  / taxjar_id (many2one)          : relation is now 'taxjar.api' ('base.account.taxjar') [nothing to do]
+account_taxjar / product.template         / tax_code_id (many2one)        : relation is now 'taxjar.category' ('product.taxjar.category') [nothing to do]
+account_taxjar / taxjar.nexus.sourcing    / taxable_account_id (many2one) : NEW relation: account.account
+---XML records in module 'account_taxjar'---
+DEL ir.actions.act_window: account_taxjar.account_taxjar_nexus_action
+DEL ir.actions.act_window: account_taxjar.account_taxjar_product_taxjar_category_action
+DEL ir.actions.act_window: account_taxjar.action_taxjar [renamed to base_taxjar module]
+DEL ir.model.access: account_taxjar.access_base_account_taxjar
+DEL ir.model.access: account_taxjar.access_base_account_taxjar_manager
+DEL ir.model.access: account_taxjar.access_product_tax_code_group_system
+DEL ir.model.access: account_taxjar.access_product_tax_code_user
+DEL ir.ui.menu: account_taxjar.menu_account_taxjar
+DEL ir.ui.menu: account_taxjar.menu_taxjar_categories [renamed to base_taxjar module]
+DEL ir.ui.menu: account_taxjar.menu_taxjar_configuration [renamed to base_taxjar module]
+DEL ir.ui.menu: account_taxjar.menu_taxjar_nexus
+NEW ir.ui.view: account_taxjar.view_account_position_form
+NEW ir.ui.view: account_taxjar.view_tax_form
+DEL ir.ui.view: account_taxjar.account_position_taxjar_inherit_from_view
+DEL ir.ui.view: account_taxjar.account_taxjar_nexus_tree
+DEL ir.ui.view: account_taxjar.account_taxjar_product_taxjar_category_form
+DEL ir.ui.view: account_taxjar.account_taxjar_product_taxjar_category_search
+DEL ir.ui.view: account_taxjar.account_taxjar_product_taxjar_category_tree
+DEL ir.ui.view: account_taxjar.view_base_account_taxjar_form
+DEL ir.ui.view: account_taxjar.view_base_account_taxjar_tree
