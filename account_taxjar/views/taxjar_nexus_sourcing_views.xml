@@ -5,7 +5,7 @@
     <record id="taxjar_nexus_sourcing_form" model="ir.ui.view">
         <field name="name">taxjar.nexus.sourcing.form</field>
         <field name="model">taxjar.nexus.sourcing</field>
-        <field name="inherit_id" ref="taxjar_nexus_sourcing_form"/>
+        <field name="inherit_id" ref="base_taxjar.taxjar_nexus_sourcing_form"/>
         <field name="arch" type="xml">
             <field name="sourcing_type" position="after">
                 <field name="taxable_account_id"/>
@@ -16,7 +16,7 @@
     <record id="taxjar_nexus_sourcing_tree" model="ir.ui.view">
         <field name="name">taxjar.nexus.sourcing.tree</field>
         <field name="model">taxjar.nexus.sourcing</field>
-         <field name="inherit_id" ref="taxjar_nexus_sourcing_tree"/>
+         <field name="inherit_id" ref="base_taxjar.taxjar_nexus_sourcing_tree"/>
         <field name="arch" type="xml">
             <field name="sourcing_type" position="after">
                 <field name="taxable_account_id"/>
