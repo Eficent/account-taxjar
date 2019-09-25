@@ -1,5 +1,5 @@
 ---Models in module 'account_taxjar'---
-obsolete model base.account.taxjar
+obsolete model base.account.taxjar (renamed to taxjar.api)
 obsolete model product.taxjar.category (renamed to taxjar.category)
 new model account.taxjar.tax.abstract [abstract]
 ---Fields in module 'account_taxjar'---
@@ -7,10 +7,12 @@ account_taxjar / account.fiscal.position  / is_nexus (boolean)            : DEL
 account_taxjar / account.fiscal.position  / sourcing_type (selection)     : DEL selection_keys: ['destination', 'origin']
 account_taxjar / account.fiscal.position  / taxjar_id (many2one)          : DEL relation: base.account.taxjar
 account_taxjar / account.fiscal.position  / taxjar_nexus_sourcing_id (many2one): NEW relation: taxjar.nexus.sourcing
-account_taxjar / base.account.taxjar      / name (char)                   : DEL
+account_taxjar / base.account.taxjar      / __last_update (datetime)      : module is now 'base_taxjar' ('account_taxjar')
+account_taxjar / base.account.taxjar      / display_name (char)           : module is now 'base_taxjar' ('account_taxjar')
+account_taxjar / base.account.taxjar      / name (char)                   : module is now 'base_taxjar' ('account_taxjar')
 account_taxjar / base.account.taxjar      / taxable_account_id (many2one) : DEL relation: account.account, required
-account_taxjar / base.account.taxjar      / taxjar_api_token (char)       : DEL
-account_taxjar / base.account.taxjar      / taxjar_api_url (char)         : DEL
+account_taxjar / base.account.taxjar      / taxjar_api_token (char)       : module is now 'base_taxjar' ('account_taxjar')
+account_taxjar / base.account.taxjar      / taxjar_api_url (char)         : module is now 'base_taxjar' ('account_taxjar')
 account_taxjar / product.category         / tax_code_id (many2one)        : relation is now 'taxjar.category' ('product.taxjar.category') [nothing to do]
 account_taxjar / product.product          / tax_code_id (many2one)        : relation is now 'taxjar.category' ('product.taxjar.category') [nothing to do]
 account_taxjar / product.taxjar.category  / __last_update (datetime)      : module is now 'base_taxjar' ('account_taxjar')

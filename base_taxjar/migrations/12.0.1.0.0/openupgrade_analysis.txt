@@ -1,18 +1,20 @@
 ---Models in module 'base_taxjar'---
-new model taxjar.api
+new model taxjar.api (renamed from base.account.taxjar)
 new model taxjar.breakdown.tax
 new model taxjar.category (renamed from product.taxjar.category)
 new model taxjar.nexus.sourcing
 new model taxjar.tax.abstract [abstract]
 ---Fields in module 'base_taxjar'---
+base_taxjar  / base.account.taxjar      / __last_update (datetime)      : previously in module account_taxjar
+base_taxjar  / base.account.taxjar      / display_name (char)           : previously in module account_taxjar
+base_taxjar  / base.account.taxjar      / name (char)                   : previously in module account_taxjar
+base_taxjar  / base.account.taxjar      / taxjar_api_token (char)       : previously in module account_taxjar
+base_taxjar  / base.account.taxjar      / taxjar_api_url (char)         : previously in module account_taxjar
 base_taxjar  / product.taxjar.category  / __last_update (datetime)      : previously in module account_taxjar
 base_taxjar  / product.taxjar.category  / description (char)            : previously in module account_taxjar
 base_taxjar  / product.taxjar.category  / display_name (char)           : previously in module account_taxjar
 base_taxjar  / product.taxjar.category  / name (char)                   : previously in module account_taxjar
 base_taxjar  / product.taxjar.category  / taxjar_id (many2one)          : previously in module account_taxjar
-base_taxjar  / taxjar.api               / name (char)                   : NEW
-base_taxjar  / taxjar.api               / taxjar_api_token (char)       : NEW
-base_taxjar  / taxjar.api               / taxjar_api_url (char)         : NEW
 base_taxjar  / taxjar.breakdown.tax     / city (char)                   : NEW
 base_taxjar  / taxjar.breakdown.tax     / county (char)                 : NEW
 base_taxjar  / taxjar.breakdown.tax     / state_id (many2one)           : NEW relation: res.country.state
