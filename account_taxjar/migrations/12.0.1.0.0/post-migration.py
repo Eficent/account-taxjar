@@ -15,7 +15,7 @@ def _migrate_account_fiscal_position_to_taxjar_nexus_sourcing(env):
     SELECT afp.id, afp.name, afp.taxjar_id, afp.sourcing_type,
            bat.taxable_account_id
     FROM account_fiscal_position AS afp
-    INNER JOIN base_account_taxjar AS bat ON bat.id = afp.taxjar_id
+    INNER JOIN taxjar_api AS bat ON bat.id = afp.taxjar_id
     WHERE afp.is_nexus = TRUE;
     """)
     taxjar_nexus_sourcing = env['taxjar.nexus.sourcing']

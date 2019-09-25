@@ -4,7 +4,8 @@
 from openupgradelib import openupgrade
 
 _model_renames = [
-    ('base.account.taxjar', 'taxjar.api')
+    ('base.account.taxjar', 'taxjar.api'),
+    ('product.taxjar.category', 'taxjar.category'),
 ]
 
 _table_renames = [
@@ -16,6 +17,7 @@ _table_renames = [
 @openupgrade.migrate()
 def migrate(env, version):
     cr = env.cr
-    if openupgrade.table_exists(cr, 'base_account_taxjar'):
+    if openupgrade.table_exists(cr, 'base_account_taxjar') and \
+            openupgrade.table_exists(cr, 'product_taxjar_category'):
         openupgrade.rename_models(cr, _model_renames)
         openupgrade.rename_tables(cr, _table_renames)
