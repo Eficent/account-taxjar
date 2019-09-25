@@ -1,7 +1,7 @@
 # Copyright 2019 Eficent Business and IT Consulting Services, S.L.
 # License LGPL-3.0 or later (https://www.gnu.org/licenses/lgpl.html).
 import logging
-from odoo import api, SUPERUSER_ID
+from openupgradelib import openupgrade
 
 _logger = logging.getLogger(__name__)
 
@@ -32,7 +32,6 @@ def _migrate_account_fiscal_position_to_taxjar_nexus_sourcing(env):
         afp.write({'taxjar_nexus_sourcing_id': tns.id})
 
 
-def migrate(cr, version):
-    with api.Environment.manage():
-        env = api.Environment(cr, SUPERUSER_ID, {})
-        _migrate_account_fiscal_position_to_taxjar_nexus_sourcing(env)
+@openupgrade.migrate()
+def migrate(env, version):
+    _migrate_account_fiscal_position_to_taxjar_nexus_sourcing(env)
