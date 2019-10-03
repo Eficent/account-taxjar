@@ -5,23 +5,39 @@
     <record id="taxjar_nexus_sourcing_form" model="ir.ui.view">
         <field name="name">taxjar.nexus.sourcing.form</field>
         <field name="model">taxjar.nexus.sourcing</field>
-        <field name="inherit_id" ref="base_taxjar.taxjar_nexus_sourcing_form"/>
         <field name="arch" type="xml">
-            <field name="sourcing_type" position="after">
-                <field name="taxable_account_id"/>
-            </field>
+            <form string="Taxjar Nexus Sourcing">
+                <group>
+                    <field name="name"/>
+                    <field name="taxjar_id"/>
+                    <field name="sourcing_type"/>
+                    <field name="taxable_account_id"/>
+                </group>
+            </form>
         </field>
     </record>
 
     <record id="taxjar_nexus_sourcing_tree" model="ir.ui.view">
         <field name="name">taxjar.nexus.sourcing.tree</field>
         <field name="model">taxjar.nexus.sourcing</field>
-         <field name="inherit_id" ref="base_taxjar.taxjar_nexus_sourcing_tree"/>
         <field name="arch" type="xml">
-            <field name="sourcing_type" position="after">
+            <tree create="0">
+                <field name="name"/>
+                <field name="taxjar_id"/>
+                <field name="sourcing_type"/>
                 <field name="taxable_account_id"/>
-            </field>
+            </tree>
         </field>
     </record>
+
+    <record id="taxjar_nexus_sourcing_action" model="ir.actions.act_window">
+        <field name="name">TaxJar Nexus</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="view_type">form</field>
+        <field name="res_model">taxjar.nexus.sourcing</field>
+        <field name="view_id" ref="taxjar_nexus_sourcing_tree"/>
+    </record>
+
+    <menuitem action="taxjar_nexus_sourcing_action" id="menu_taxjar_nexus_sourcing" name="TaxJar Nexus Sourcing" parent="menu_taxjar" sequence="3"/>
 
 </odoo>

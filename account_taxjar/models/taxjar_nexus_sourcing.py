@@ -5,7 +5,15 @@ from odoo import fields, models
 
 
 class TaxJarNexusSourcing(models.Model):
-    _inherit = 'taxjar.nexus.sourcing'
+    _name = 'taxjar.nexus.sourcing'
+    _description = 'TaxJar Nexus Sourcing'
+
+    name = fields.Char('Name')
+    taxjar_id = fields.Many2one('taxjar.api', string='TaxJar API ID')
+    sourcing_type = fields.Selection([
+        ('origin', 'Origin Sourcing'),
+        ('destination', 'Destination Sourcing'),
+    ])
 
     taxable_account_id = fields.Many2one(
         'account.account', string='Taxable Account TaxJar',

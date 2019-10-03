@@ -1,13 +1,15 @@
 # Copyright 2019 Eficent Business and IT Consulting Services S.L.
 #   (http://www.eficent.com)
 # License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl.html).
-from odoo import models
+from odoo import fields, models
 
 
 class AccountTax(models.Model):
-    _name = 'account.tax'
-    _inherit = ['account.tax', 'taxjar.breakdown.tax']
-    _description = 'Add address info of tax collections'
+    _inherit = 'account.tax'
+
+    state_id = fields.Many2one('res.country.state')
+    county = fields.Char()
+    city = fields.Char()
 
     @staticmethod
     def _get_update_tax_domain(tax):
@@ -32,8 +34,8 @@ class AccountTax(models.Model):
             'name': rate['name'],
             'amount': rate['amount'],
             'amount_type': 'percent',
-            'type_tax_use': 'sale',  # TODO: See purchase side
-            'description': rate['name'],  # TODO: Add Description TIMESTAMP
+            'type_tax_use': 'sale',  # Only sales case
+            'description': rate['name'],  # TODO: Add Description TIMESTAMP?
             'account_id': taxable_account_id,
             'refund_account_id': taxable_account_id,
             'state_id': rate['state_id'] if 'state_id' in rate else False,

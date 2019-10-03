@@ -10,7 +10,7 @@ _logger = logging.getLogger(__name__)
 
 class AccountInvoice(models.Model):
     _name = 'account.invoice'
-    _inherit = ['account.invoice', 'account.taxjar.tax.abstract']
+    _inherit = ['account.invoice', 'taxjar.abstract.base']
 
     # If we have several warehouses on account_invoice_lines we need to get
     # their related partner.
@@ -31,6 +31,11 @@ class AccountInvoice(models.Model):
     @staticmethod
     def _get_price(line):
         return line.price_unit, line.quantity, line.discount
+
+    @staticmethod
+    def _set_tax_ids(line, taxes):
+        line.invoice_line_tax_ids = [
+            (6, 0, [x.id for x in taxes])]
 
     def prepare_taxes(self):
         super().prepare_taxes()

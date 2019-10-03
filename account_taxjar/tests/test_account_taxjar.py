@@ -56,7 +56,7 @@ class TestAccountTaxjar(SingleTransactionCase):
             'auto_apply': True,
         })
         # Create TaxJar Configuration
-        self.taxjar = self.env['taxjar.api'].create({
+        self.taxjar = self.env['taxjar.api.configurator'].create({
             'name': 'TaxJar',
             'taxjar_api_url': 'https://api.sandbox.taxjar.com',
             'taxjar_api_token': 'token_pride',

@@ -6,8 +6,8 @@ from odoo import api, fields, models
 from .taxjar_request import TaxJarRequest
 
 
-class TaxJarAPI(models.Model):
-    _name = 'taxjar.api'
+class TaxJarAPIConfigurator(models.Model):
+    _name = 'taxjar.api.configurator'
     _description = 'Base TaxJar Configuration'
 
     name = fields.Char('Name')
